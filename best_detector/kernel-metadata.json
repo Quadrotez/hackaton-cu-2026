@@ -1,0 +1,13 @@
+{
+  "id": "b5wvix/astramis-best-detector-yolo11s-seg",
+  "title": "Astramis best detector - YOLO11s-seg",
+  "code_file": "kaggle_train_best.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": "true",
+  "enable_gpu": "true",
+  "enable_internet": "true",
+  "dataset_sources": ["b5wvix/astramis-slim"],
+  "competition_sources": [],
+  "kernel_sources": []
+}
