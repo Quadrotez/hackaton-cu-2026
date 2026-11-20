@@ -53,7 +53,7 @@ def load_frames(data, labels_file):
     frames = []
     for im in info["images"]:
         d = data / Path(im["file_name"]).parent
-        if not color_path(d).exists():
+        if not color_path(d).exists() or not (d / "depth.png").exists():
             continue
         frames.append({"dir": d, "id": d.name, "w": im["width"], "h": im["height"], "anns": anns[im["id"]]})
     return frames
@@ -163,7 +163,10 @@ def main():
         result = model(str(color_path(frame_dir)), conf=args.conf, imgsz=args.imgsz, verbose=False)[0]
         if result.masks is None:
             return []
-        depth, plane = read_frame(frame_dir)
+        try:
+            depth, plane = read_frame(frame_dir)
+        except Exception:
+            return []
         h, w = depth.shape
         out = []
         for box, conf, cls, poly in zip(
