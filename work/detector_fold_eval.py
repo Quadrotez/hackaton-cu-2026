@@ -17,12 +17,12 @@ from material_features import bounds, depth_features
 from material_split import DATA, WORK
 from predict_pipeline import unpack_yolo
 from submission_tools import metric
-from train_detector_folds import frame_map, read_manifest
+from train_detector_folds import frame_map, image_size, read_manifest
 from volume_calibration import raw_volume_ml
 
 
 CONF = .025
-VIEWS = ("640", "flip640", "960")
+VIEWS = ("base", "flip")
 VARIANTS = ("yolo", "yolo_rerank", "shape_only", "shape_fused", "shape_fused_rerank")
 
 
@@ -48,11 +48,10 @@ def frame_data(path):
     return rgb, depth, meta["floor_plane"]
 
 
-def detect(model, color, view, device):
+def detect(model, color, device, *, imgsz, flip=False):
     height, width = color.shape[:2]
-    flip = view == "flip640"
     result = model.predict(source=cv2.flip(color, 1) if flip else color,
-                           conf=CONF, imgsz=960 if view == "960" else 640,
+                           conf=CONF, imgsz=imgsz,
                            max_det=30, retina_masks=True, device=device, verbose=False)[0]
     found = []
     for d in unpack_yolo(result, (height, width)):
@@ -90,7 +89,7 @@ def mask_features(p, mask, depth, plane, camera):
     }
 
 
-def training_features(model, ids, frames, camera, device):
+def training_features(model, ids, frames, camera, device, *, imgsz):
     gt = ground_truth(ids, frames)
     records = []
     for i, gs in gt.items():
@@ -98,7 +97,7 @@ def training_features(model, ids, frames, camera, device):
             continue
         source, path, _, _ = frames[i]
         color, depth, plane = frame_data(path)
-        ds = detect(model, color, "640", device)
+        ds = detect(model, color, device, imgsz=imgsz)
         by_index = {id(p): m for p, m in ds}
         pairs = zip(gs, metric._match(gs, [p for p, _ in ds]), strict=True)
         for g, p in pairs:
@@ -130,14 +129,14 @@ def apply_form(shape, found, rows, strength):
 
 
 def named_ablations(found, features, shape):
-    main, flip, big = (found[v] for v in VIEWS)
+    main, flip = (found[v] for v in VIEWS)
     if shape is None:
-        return {"yolo": main, "yolo_rerank": rerank(main, flip, big)}
+        return {"yolo": main, "yolo_rerank": rerank(main, flip)}
     fused = [apply_form(shape, found[v], features[v], 1.0) for v in VIEWS]
     return {
         "yolo": main,
-        "yolo_rerank": rerank(main, flip, big),
-        "shape_only": apply_form(shape, main, features["640"], 0.0),
+        "yolo_rerank": rerank(main, flip),
+        "shape_only": apply_form(shape, main, features["base"], 0.0),
         "shape_fused": fused[0],
         "shape_fused_rerank": rerank(*fused),
     }
@@ -186,17 +185,17 @@ def write_json(path, obj):
         f.write("\n")
 
 
-def val_views(model, val, frames, camera, device, export_dir=None):
+def val_views(model, val, frames, camera, device, export_dir=None, *, imgsz):
     """Read each val frame once; publish primary detection masks before any shape fitting."""
     found, features, packed = {}, {}, {}
     for i in val:
         color, depth, plane = frame_data(frames[i][1])
         found[i], features[i] = {}, {}
         for view in VIEWS:
-            ds = detect(model, color, view, device)
+            ds = detect(model, color, device, imgsz=imgsz, flip=view == "flip")
             found[i][view] = [p for p, _ in ds]
             features[i][view] = [mask_features(p, mask, depth, plane, camera) for p, mask in ds]
-            if view == "640" and export_dir is not None:
+            if view == "base" and export_dir is not None:
                 h, w = depth.shape
                 packed[i] = (np.stack([np.packbits(mask, axis=1) for _, mask in ds]) if ds
                              else np.empty((0, h, (w + 7) // 8), dtype=np.uint8))
@@ -207,17 +206,17 @@ def val_views(model, val, frames, camera, device, export_dir=None):
             for i in val:
                 im = frames[i][2]
                 f.write(json.dumps({"image_id": i, "source": frames[i][0], "shape": [im["height"], im["width"]],
-                                    "detections": found[i]["640"]}, allow_nan=False) + "\n")
+                                    "detections": found[i]["base"]}, allow_nan=False) + "\n")
         print(f"FIXED DETECTIONS READY: {export_dir / 'base_detections.jsonl'} and base_masks.npz", flush=True)
     return found, features
 
 
-def _run_eval(model, train, val, frames, device, out, spec=None):
+def _run_eval(model, train, val, frames, device, out, spec=None, *, imgsz):
     camera = json.loads((DATA / "camera.json").read_text(encoding="utf-8"))
-    print(f"EXPORT {out}: {len(val)} frames (640, flip640, 960)", flush=True)
+    print(f"EXPORT {out}: {len(val)} frames at imgsz={imgsz} (base and flip)", flush=True)
     with threadpool_limits(3):
-        found, features = val_views(model, val, frames, camera, device, out)
-        rows = training_features(model, train, frames, camera, device)
+        found, features = val_views(model, val, frames, camera, device, out, imgsz=imgsz)
+        rows = training_features(model, train, frames, camera, device, imgsz=imgsz)
         if rows.empty or set(rows["form"]) != set(metric.FORMS):
             raise ValueError(f"Insufficient predicted-mask form training support at {out}")
         if spec is not None and set(rows["object_id"]) & set(spec["val_object_ids"]):
@@ -239,16 +238,27 @@ def _run_eval(model, train, val, frames, device, out, spec=None):
     return out_scores
 
 
-def evaluate_fold(fold_root, checkpoint, spec, frames, device="cpu"):
+def evaluation_size(model, imgsz):
+    if imgsz is not None:
+        return imgsz
+    try:
+        return image_size(model.ckpt["train_args"]["imgsz"])
+    except (KeyError, TypeError, ValueError, argparse.ArgumentTypeError) as exc:
+        raise ValueError("Checkpoint has no valid evaluation size; pass --imgsz") from exc
+
+
+def evaluate_fold(fold_root, checkpoint, spec, frames, device="cpu", *, imgsz=None):
     from ultralytics import YOLO
 
     train = spec["train_image_ids"]
     val = spec["val_real_image_ids"] + spec["val_synth_image_ids"]
     if set(train) & set(val) or len(val) != len(set(val)):
         raise ValueError(f"Overlapping validation and training frames in fold {spec['fold']}")
+    model = YOLO(str(checkpoint.resolve()))
+    size = evaluation_size(model, imgsz)
     out = fold_root / "evaluation"
     out.mkdir(exist_ok=False)
-    _run_eval(YOLO(str(checkpoint.resolve())), train, val, frames, device, out, spec)
+    _run_eval(model, train, val, frames, device, out, spec, imgsz=size)
 
 
 def summarize_pooled(root, specs, frames):
@@ -283,6 +293,7 @@ def main():
     ap.add_argument("--fold", type=int, default=None)
     ap.add_argument("--weights", type=Path, default=WORK / "weights" / "best.pt")
     ap.add_argument("--device", default="cpu")
+    ap.add_argument("--imgsz", type=image_size, help="Override the checkpoint's training resolution")
     args = ap.parse_args()
     if args.diagnostic == (args.fold is not None):
         ap.error("Choose --diagnostic or --fold")
@@ -298,12 +309,14 @@ def main():
         objects = {a["attributes"]["object_id"] for _, _, anns in held for a in anns}
         train = [i for i, (_, _, _, anns) in frames.items()
                  if not any(a["attributes"]["object_id"] in objects for a in anns)]
+        model = YOLO(str(args.weights.resolve()))
+        size = evaluation_size(model, args.imgsz)
         args.out.mkdir(parents=True, exist_ok=False)
-        _run_eval(YOLO(str(args.weights.resolve())), train, val, frames, args.device, args.out)
+        _run_eval(model, train, val, frames, args.device, args.out, imgsz=size)
     else:
         spec = next(f for f in read_manifest(args.manifest)["folds"] if f["fold"] == args.fold)
         args.out.mkdir(parents=True, exist_ok=False)
-        evaluate_fold(args.out, args.weights, spec, frames, args.device)
+        evaluate_fold(args.out, args.weights, spec, frames, args.device, imgsz=args.imgsz)
 
 
 if __name__ == "__main__":

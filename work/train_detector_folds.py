@@ -16,6 +16,15 @@ from material_split import DATA, WORK, load_frames
 
 FORMS = ("bulk", "solid")
 ROOT = WORK.parent
+DEFAULT_MODEL = ROOT / "yolo11n-seg.pt"
+
+
+def image_size(value):
+    """Keep Ultralytics from silently rounding the configured resolution."""
+    size = int(value)
+    if size <= 0 or size % 32:
+        raise argparse.ArgumentTypeError("imgsz must be a positive multiple of 32")
+    return size
 
 
 def read_manifest(path):
@@ -89,41 +98,63 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--manifest", type=Path, default=DEFAULT_OUT)
     ap.add_argument("--out", type=Path, default=WORK / "detector_oof_v1")
-    ap.add_argument("--folds", type=int, nargs="+", default=[1, 4, 2, 3, 5])
-    ap.add_argument("--epochs", type=int, default=10)
-    ap.add_argument("--batch", type=int, default=8)
-    ap.add_argument("--device", default="mps" if torch.backends.mps.is_available() else "cpu")
-    ap.add_argument("--init", type=Path, default=ROOT / "yolo11n-seg.pt")
+    ap.add_argument("--folds", type=int, nargs="+", default=[1, 4, 2, 3, 5],
+                    help="Fold IDs in execution order, e.g. --folds 1")
+    ap.add_argument("--epochs", type=int, default=10, help="Fixed number of epochs per fold")
+    ap.add_argument("--batch", type=int, default=8, help="Training batch size")
+    ap.add_argument("--device", default="0" if torch.cuda.is_available() else
+                    ("mps" if torch.backends.mps.is_available() else "cpu"))
+    ap.add_argument("--model", "--init", dest="model", type=Path, default=DEFAULT_MODEL,
+                    help="Local pretrained segmentation .pt, e.g. ./yolo11m-seg.pt; do not use case-fitted weights")
+    ap.add_argument("--imgsz", type=image_size, default=640, help="Input size for both training and outer evaluation")
     ap.add_argument("--evaluate", action="store_true", help="Export fixed OOF boxes/masks and run form/ranking ablations")
+    ap.add_argument("--eval-device", help="Override the evaluation device; defaults to --device")
     args = ap.parse_args()
-    if not args.init.is_file() or args.epochs <= 0 or args.batch <= 0:
-        ap.error("Expected local pretrained weights, positive epochs and positive batch size")
-    if digest(args.init) != "55ed65c56c91713d23e8402371c6c49a6fd84f257f7dce452e8d70e41dcbe152":
-        ap.error("Use the official pretrained YOLO11n-seg weights, not a case-fitted detector")
+    pretrained = args.model.resolve()
+    if not pretrained.is_file() or pretrained.suffix != ".pt":
+        ap.error(f"Pass a local pretrained segmentation checkpoint via --model: {pretrained}")
+    if args.epochs <= 0 or args.batch <= 0:
+        ap.error("--epochs and --batch must be positive")
+    if args.out.exists():
+        raise FileExistsError(args.out)
     manifest = read_manifest(args.manifest)
     configs = {f["fold"]: f for f in manifest["folds"]}
     if len(args.folds) != len(set(args.folds)) or not set(args.folds) <= configs.keys():
         ap.error("Expected distinct fold IDs from the manifest")
+    from ultralytics import YOLO
+
+    def fresh_model():
+        model = YOLO(str(pretrained))
+        if model.task != "segment":
+            ap.error("--model must be a segmentation checkpoint")
+        # Do not let one of our own Astramis checkpoints leak across outer folds.
+        if {str(name).strip().lower() for name in model.names.values()} & set(FORMS):
+            ap.error("--model already has Astramis classes; initialize from public pretrained weights")
+        return model
+
+    model = fresh_model()
+    eval_device = args.eval_device or args.device
     args.out.mkdir(parents=True, exist_ok=False)
     with (args.out / "run.json").open("x", encoding="utf-8") as f:
         json.dump({
             "manifest": str(args.manifest.resolve()), "manifest_sha256": digest(args.manifest),
-            "seed": 0, "imgsz": 640, "epochs": args.epochs, "batch": args.batch, "device": args.device,
-            "checkpoint": "last.pt", "init": str(args.init.resolve()), "init_sha256": digest(args.init),
+            "seed": 0, "imgsz": args.imgsz, "epochs": args.epochs, "batch": args.batch, "device": args.device,
+            "eval_device": eval_device if args.evaluate else None,
+            "checkpoint": "last.pt", "init": str(pretrained), "init_sha256": digest(pretrained),
             "fold_order": args.folds,
         }, f, indent=2)
         f.write("\n")
     cv2.setNumThreads(1)
     torch.set_num_threads(4)
-    from ultralytics import YOLO
-
     frames = frame_map()
-    for fold in args.folds:
+    for index, fold in enumerate(args.folds):
+        if index:
+            model = fresh_model()
         fold_root = args.out / f"fold_{fold:02d}"
         data = prepare(fold_root / "data", configs[fold], frames)
-        print(f"TRAIN fold {fold} ({args.device}, {args.epochs} fixed epochs)", flush=True)
-        model = YOLO(str(args.init.resolve()))
-        model.train(data=str(data), epochs=args.epochs, imgsz=640, batch=args.batch, seed=0,
+        print(f"TRAIN fold {fold} ({pretrained.name}, {args.device}, imgsz={args.imgsz}, "
+              f"batch={args.batch}, {args.epochs} fixed epochs)", flush=True)
+        model.train(data=str(data), epochs=args.epochs, imgsz=args.imgsz, batch=args.batch, seed=0,
                     device=args.device, workers=0, val=False, deterministic=True, plots=False, verbose=False,
                     project=str(fold_root.resolve()), name="train", exist_ok=False)
         checkpoint = fold_root / "train" / "weights" / "last.pt"
@@ -135,7 +166,7 @@ def main():
         print(f"READY fold {fold}: {checkpoint}", flush=True)
         if args.evaluate:
             from detector_fold_eval import evaluate_fold
-            evaluate_fold(fold_root, checkpoint, configs[fold], frames, device="cpu")
+            evaluate_fold(fold_root, checkpoint, configs[fold], frames, device=eval_device, imgsz=args.imgsz)
     if args.evaluate:
         from detector_fold_eval import summarize_pooled
         summarize_pooled(args.out, [configs[f] for f in sorted(args.folds)], frames)
