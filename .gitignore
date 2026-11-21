@@ -19,3 +19,4 @@ __pycache__/
 tg_bot/token.txt
 tg_bot/users.json
 tg_bot/offset.txt
+tg_bot/messages.jsonl

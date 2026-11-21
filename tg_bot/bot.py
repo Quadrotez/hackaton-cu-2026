@@ -12,6 +12,7 @@ import requests
 ROOT = Path(__file__).resolve().parent
 TOKEN = (ROOT / "token.txt").read_text().strip()
 USERS = ROOT / "users.json"
+LOG = ROOT / "messages.jsonl"
 API = f"https://api.telegram.org/bot{TOKEN}"
 OFFSET = ROOT / "offset.txt"
 
@@ -72,6 +73,12 @@ def main():
                 continue
             users.setdefault(str(cid), {"name": name, "username": fromu.get("username", "")})
             save_users(users)
+            if text:
+                import datetime
+                with LOG.open("a", encoding="utf-8") as fh:
+                    fh.write(json.dumps({"ts": datetime.datetime.now().isoformat(timespec="seconds"),
+                                         "chat_id": cid, "sender": name, "text": text},
+                                        ensure_ascii=False) + "\n")
             if text.startswith("/"):
                 continue
             sender = users[str(cid)].get("name", str(cid))
