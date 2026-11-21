@@ -1,8 +1,12 @@
 """Synthetic unit fixtures (not project OOF/test results)."""
 import csv
 import json
+import os
 from pathlib import Path
+import subprocess
+import sys
 from tempfile import TemporaryDirectory
+from time import perf_counter
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
@@ -218,6 +222,74 @@ class AdapterTests(unittest.TestCase):
             self.assertEqual(a.read_json(plan), body)
             with patch("sys.stderr"), self.assertRaises(SystemExit):
                 a.cli(argv)  # plan does not overwrite
+
+
+@unittest.skipUnless(os.environ.get("SPRINT5_ORACLE_SMOKE") == "1",
+                     "opt-in GT oracle smoke; not a model or an OOF estimate")
+class FrozenOracleSmoke(unittest.TestCase):
+    def test_oracle_material_cli_end_to_end(self):
+        """GT is used ONLY to construct this throwaway positive-control fixture."""
+        fold, *_ = a.training_contract()
+        gt, oof = a.load_oof(a.OOF_BASE, fold)
+        frozen_raw, test = a.load_test()
+        original_hash = a.sha(a.TEST_BASE)
+        oof_labels = {}
+        for image, ds in oof.items():
+            oof_labels.update({(image, j): d["material"] for j, d in enumerate(ds)})
+            for g, j in zip(gt[image], a.slots(gt[image], ds), strict=True):
+                if j is not None:
+                    oof_labels[image, j] = g["material"]
+        test_labels = {(image, j): d["material"] for image, ds in test.items() for j, d in enumerate(ds)}
+        forced = set(list(test_labels)[:2])
+        for key in forced:
+            test_labels[key] = "wood" if test_labels[key] != "wood" else "metal"
+
+        with TemporaryDirectory(prefix="sprint5-oracle-only-") as tmp:
+            tmp = Path(tmp)
+            for split, base, folds, labels in (("oof", oof, fold, oof_labels),
+                                                ("test", test, None, test_labels)):
+                keys = a.id_fields(folds)
+                header = (*keys, "p_bulk", *(f"p_material_{m}" for m in a.MATERIALS))
+                values = [(*r[:len(keys)], .5, *(.99 if m == labels[r[:2]] else .002 for m in a.MATERIALS))
+                          for r in a.inventory(base, folds)]
+                a.write_csv(tmp / f"ORACLE_FIXTURE_{split}.csv", header, values)
+
+            def timed(*argv):
+                start = perf_counter()
+                process = subprocess.run([sys.executable, "-B", *map(str, argv)], cwd=a.ROOT,
+                                         capture_output=True, text=True)
+                elapsed = perf_counter() - start
+                # Never propagate stdout from export: it contains the oracle-only delta.
+                self.assertEqual(process.returncode, 0, process.stderr)
+                return process.stdout, elapsed
+
+            script = Path(a.__file__)
+            spec = tmp / "ORACLE_FIXTURE_plan.json"
+            out = tmp / "ORACLE_FIXTURE_DO_NOT_SUBMIT.csv"
+            common = ("--variant", "material", "--oof-probs", tmp / "ORACLE_FIXTURE_oof.csv",
+                      "--test-probs", tmp / "ORACLE_FIXTURE_test.csv")
+            _, plan_s = timed(script, "plan", *common, "--out", spec)
+            export, export_s = timed(script, "export", *common, "--deploy-spec", spec,
+                                     "--allow-unattested", "--out", out)
+            receipt = json.loads(export)
+            self.assertEqual(receipt["output_sha256"], a.sha(out))
+            self.assertEqual(receipt["oof_attestation"], "unattested")
+            self.assertEqual(receipt["test_attestation"], "unattested")
+            validation, check_s = timed(a.WORK / "submission_tools.py", out)
+            self.assertIn("137 frames, 342 objects, 10 none", validation)
+            result = dict(a.rows(out, ("image_id", "prediction")))
+            self.assertEqual(list(result), list(frozen_raw))
+            edits = set()
+            for image in result:
+                for j, (before, after) in enumerate(zip(frozen_raw[image].split(";"),
+                                                        result[image].split(";"), strict=True)):
+                    for k, (old, new) in enumerate(zip(before.split(), after.split(), strict=True)):
+                        if old != new:
+                            edits.add((image, j, k))
+            self.assertEqual(edits, {(image, j, 6) for image, j in forced})
+            self.assertEqual(a.sha(a.TEST_BASE), original_hash)
+            print(f"\nORACLE TEST ONLY: plan {plan_s:.3f}s; export {export_s:.3f}s; "
+                  f"validator {check_s:.3f}s; 137/342/10, exactly two material tokens changed.")
 
 
 if __name__ == "__main__":
