@@ -1,4 +1,5 @@
 # Данные кейса: лежат локально, в репозиторий не попадают (правила хакатона).
+dataset
 dataset/
 astramis_case/
 *.zip
@@ -22,3 +23,4 @@ kaggle_token.txt
 
 # Служебные файлы macOS
 .DS_Store
+catboost_info/
