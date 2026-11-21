@@ -16,3 +16,6 @@ predictions.csv
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
+tg_bot/token.txt
+tg_bot/users.json
+tg_bot/offset.txt
