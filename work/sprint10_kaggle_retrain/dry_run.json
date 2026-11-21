@@ -1,0 +1,77 @@
+{
+  "action": "validated 5 staged splits; no local training",
+  "clean_manifest_sha256": "43a2c4d38166e9ff5cd5d5d414ad6bb7be299545d9ff1cd9bde776c54159649f",
+  "folds": [
+    {
+      "fold": 1,
+      "real_empties_held_out": 23,
+      "real_val": 60,
+      "staged_labels_sha256": {
+        "train": "76d3ec62f11eb88dfb25a3f4dc43ffedefa9584cafe3a77aa340e08a32f82531",
+        "val": "1ea6a357544f88688d44ae7dfd7d90bc6729aa66eaa4a4130a1ed989ea24dbf4"
+      },
+      "synth_removed": 173,
+      "synth_val": 94,
+      "train_real": 203,
+      "train_synth": 299
+    },
+    {
+      "fold": 2,
+      "real_empties_held_out": 0,
+      "real_val": 47,
+      "staged_labels_sha256": {
+        "train": "5f27470ae7a2d170b967e6a5a5152260c761bf47e95827b15a29b1ae4a3f5444",
+        "val": "0c2662e246d47f749a788b2251cf39e5f31e7c0f95fdcb5437b5c92e9ae22fb1"
+      },
+      "synth_removed": 0,
+      "synth_val": 105,
+      "train_real": 216,
+      "train_synth": 471
+    },
+    {
+      "fold": 3,
+      "real_empties_held_out": 0,
+      "real_val": 50,
+      "staged_labels_sha256": {
+        "train": "8a3613d4a904e5af99b5b8b95dfee54ed1a1d51aca469975e59b43adc7436212",
+        "val": "5238da2ae97889ed640c54fd6ba656a13d1b91ec738a2dbf7e4936bb04974ec6"
+      },
+      "synth_removed": 0,
+      "synth_val": 112,
+      "train_real": 213,
+      "train_synth": 462
+    },
+    {
+      "fold": 4,
+      "real_empties_held_out": 26,
+      "real_val": 59,
+      "staged_labels_sha256": {
+        "train": "e55a52b3619a44a31b479dd1f2f4c232d64a266ba3c63fc8609f3766991e74ae",
+        "val": "adf011aa99828fd2b984b6ec73667cad67e59d89f887456e014d040d0cac9a8b"
+      },
+      "synth_removed": 292,
+      "synth_val": 108,
+      "train_real": 204,
+      "train_synth": 174
+    },
+    {
+      "fold": 5,
+      "real_empties_held_out": 0,
+      "real_val": 47,
+      "staged_labels_sha256": {
+        "train": "40b85f404b255df6ee6cbbdeff2e75e12bfe04e22fc00979a3a8bf973d49bad4",
+        "val": "8e11e142912443fe55f0c3cea47a8288210a41b28d3a7d2d825aeac30063337e"
+      },
+      "synth_removed": 0,
+      "synth_val": 118,
+      "train_real": 216,
+      "train_synth": 466
+    }
+  ],
+  "sources_sha256": {
+    "build_control.py": "017f8230038d78a9aca98ad527bbb21b66bcd9eea049f0c8b031ba82c3400751",
+    "build_notebook.py": "0907f0aa89cb305ad2a7631674cb8ca0f4a78cb9ce9b7ddd376b9b471e24a00a",
+    "control.py": "bd2d7ddbedef776f2488ea0ab380084a0a88d9e37441768ebf5a8b2dd5766edf",
+    "fold_runner.py": "c0cf8aee13131a4f511a1425202cffbad92b11b5b83f5528dfa52c63cf20e8dc"
+  }
+}

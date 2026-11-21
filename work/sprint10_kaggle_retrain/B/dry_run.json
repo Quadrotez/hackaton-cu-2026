@@ -1,0 +1,37 @@
+{
+  "arm": "B-targeted-rgbd-same-slot-original-labels",
+  "decoded_semantic_sha256": "b4d262f569e6a2361fcdc411779a4692f7ac21dd2d881e627160b5af2c04e019",
+  "local_manifest_sha256": "fbb50e944d704cd1610a521d8e4d056722dd40d9cc8a9fb746443be785c26ee2",
+  "no_training": true,
+  "real_oof_frames": 263,
+  "replacement_counts": {
+    "1": 24,
+    "2": 24,
+    "3": 24,
+    "4": 24,
+    "5": 24
+  },
+  "scenes": 68,
+  "staged": {
+    "1": {
+      "train": "a2224c035960511a0e62267fc7198668bb59b6827d1cdc4c691fbb8fc6f61b6a",
+      "val": "1ea6a357544f88688d44ae7dfd7d90bc6729aa66eaa4a4130a1ed989ea24dbf4"
+    },
+    "2": {
+      "train": "f767bfa8070d174f88a9202b0344e8e7e3132ba5ebbde1a76c61e6c69b7b7d47",
+      "val": "0c2662e246d47f749a788b2251cf39e5f31e7c0f95fdcb5437b5c92e9ae22fb1"
+    },
+    "3": {
+      "train": "d91021cec4b81fc5e77052460e3a019ec358f7f1d6e82f30f1318196dc14c8ce",
+      "val": "5238da2ae97889ed640c54fd6ba656a13d1b91ec738a2dbf7e4936bb04974ec6"
+    },
+    "4": {
+      "train": "8a2dabd8dbab4477f2cf5f83103586488f1ddf545bb20cbb266e6283798ed1c3",
+      "val": "adf011aa99828fd2b984b6ec73667cad67e59d89f887456e014d040d0cac9a8b"
+    },
+    "5": {
+      "train": "140aefde57525b7e518ed643e7e7b146535ed2d0adec49bd39ec3be86af8362c",
+      "val": "8e11e142912443fe55f0c3cea47a8288210a41b28d3a7d2d825aeac30063337e"
+    }
+  }
+}
