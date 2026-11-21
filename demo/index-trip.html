@@ -381,7 +381,7 @@
              width: 100%; height: 9in; page-break-after: always; break-after: page; }
   }
 </style>
-<link rel="stylesheet" href="assets/presentation.css">
+<link rel="stylesheet" href="assets/presentation.css?v=creatures-4">
 </head>
 <body data-theme="trip">
 
@@ -414,7 +414,6 @@
         <g class="trip-pulse" id="trip-c"></g>
       </g>
     </g>
-    <g id="faces"></g>
   </svg>
 </div>
 
@@ -564,6 +563,7 @@
 
 <div class="hint">← → · слайды · P · печать · лица можно оттолкнуть мышкой</div>
 
+<script src="assets/trip-faces.js?v=creatures-4"></script>
 <script>
   // ЕДИНОЕ МЕСТО ДЛЯ ЦИФР: замени null на результаты финального сабмита.
   const RESULTS = {
@@ -647,11 +647,7 @@
   }
 
   // Блик, который следует за курсором, — как отклик стекла на наклон устройства.
-  stage.addEventListener('pointermove', e => {
-    const r = stage.getBoundingClientRect();
-    stage.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100) + '%');
-    stage.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100) + '%');
-  });
+  // Pointer-driven glass highlight is handled once per frame in presentation.js.
 
   window.addEventListener('resize', fit);
   window.addEventListener('keydown', e => {
@@ -719,16 +715,16 @@
   }
 
   // Портреты: круглые полупрозрачные спутники с инерцией.
-  const GHOST_SRCS = ['faces/face1.png', 'faces/face2.png', 'faces/face3.png'];
   const overlay = document.getElementById('face-overlays');
   const ghosts = [];
   const pointer = { x: -9999, y: -9999 };
   let lastFrame = 0;
-  let nextFace = 0;
+  let ghostFrame = 0;
+  let lastGhostPortrait = null;
   window.addEventListener('pointermove', e => { pointer.x = e.clientX; pointer.y = e.clientY; });
   window.addEventListener('pointerout', e => { if (!e.relatedTarget) pointer.x = pointer.y = -9999; });
   function spawnGhost() {
-    if (document.body.classList.contains('deck-capture') || document.body.classList.contains('motion-paused') || document.body.classList.contains('faces-hidden') || document.hidden || ghosts.length >= 3) return;
+    if (document.body.classList.contains('deck-capture') || document.body.classList.contains('motion-paused') || document.body.classList.contains('faces-hidden') || document.hidden || ghosts.length >= 4) return;
     const size = Math.min(220, Math.max(110, innerWidth * .13)) * (.8 + Math.random() * .35);
     const left = Math.random() < .5;
     const wrap = document.createElement('div');
@@ -736,11 +732,12 @@
     wrap.style.cssText = `left:${left ? 10 : innerWidth - size - 10}px;top:${80 + Math.random() * Math.max(1, innerHeight - size - 170)}px;width:${size}px;--halo:#e1e4ea;--life:${3 + Math.random()*1.2}s`;
     const portrait = document.createElement('div');
     portrait.className = 'ghost-portrait';
-    const image = document.createElement('img');
-    image.src = GHOST_SRCS[nextFace++ % GHOST_SRCS.length]; image.alt = ''; image.draggable = false;
-    portrait.appendChild(image); wrap.appendChild(portrait); overlay.appendChild(wrap);
-    const ghost = {el:wrap, x:0, y:0, vx:0, vy:0, phase:Math.random()*6.28};
+    const selected=window.tripFaces.pick(lastGhostPortrait);lastGhostPortrait=selected.id;
+    portrait.appendChild(window.tripFaces.actor(selected));
+    wrap.appendChild(portrait); overlay.appendChild(wrap);
+    const ghost = {el:wrap, left:parseFloat(wrap.style.left), top:parseFloat(wrap.style.top), size, x:0, y:0, vx:0, vy:0, phase:Math.random()*6.28};
     ghosts.push(ghost);
+    startGhosts();
     wrap.addEventListener('animationend', e => { if (e.target === wrap && e.animationName === 'orb-life') removeGhost(ghost); });
   }
   function removeGhost(ghost) {
@@ -749,62 +746,47 @@
   }
   window.addEventListener('clear-faces', () => {
     for (const g of ghosts) {
-      const r=g.el.getBoundingClientRect();
-      const dx=r.left+r.width/2-innerWidth/2,dy=r.top+r.height/2-innerHeight/2;
+      const dx=g.left+g.x+g.size/2-innerWidth/2,dy=g.top+g.y+g.size/2-innerHeight/2;
       const distance=Math.hypot(dx,dy)||1;
       g.vx=dx/distance*45;g.vy=dy/distance*45;
     }
   });
-  function ghostTick(time) {
-    const dt = Math.min(2, (time-lastFrame)/16.67 || 1); lastFrame=time;
-    if (!document.body.classList.contains('motion-paused') && !document.hidden) {
-      for (const g of [...ghosts]) {
-        const r = g.el.getBoundingClientRect();
-        const dx=r.left+r.width/2-pointer.x, dy=r.top+r.height/2-pointer.y;
-        const distance=Math.hypot(dx,dy);
-        if(distance<230 && distance>.1) { const f=(230-distance)/230*4.8*dt; g.vx+=dx/distance*f; g.vy+=dy/distance*f; }
-        g.vx*=Math.pow(.965,dt); g.vy*=Math.pow(.965,dt);
-        g.x+=g.vx*dt; g.y+=g.vy*dt;
-        if(r.right < -30 || r.left > innerWidth+30 || r.bottom < -30 || r.top > innerHeight+30) { removeGhost(g); continue; }
-        g.el.style.transform=`translate3d(${g.x}px,${g.y + Math.sin(time*.0006+g.phase)*10}px,0)`;
-      }
+  function startGhosts() {
+    if (!ghostFrame && ghosts.length && !document.hidden && !document.body.matches('.motion-paused, .faces-hidden, .deck-capture')) {
+      lastFrame = 0;
+      ghostFrame = requestAnimationFrame(ghostTick);
     }
-    requestAnimationFrame(ghostTick);
   }
-  // Скримеры на всех слайдах Trip: каждые 5–9 секунд.
-  const screamer = document.createElement('div');
-  screamer.id = 'screamer';
-  screamer.setAttribute('aria-hidden', 'true');
-  const screamImage = document.createElement('img');
-  screamImage.alt = '';
-  screamer.appendChild(screamImage);
-  document.body.appendChild(screamer);
-  let screamCount = 0;
-  let screamEnd;
-  function scream() {
-    if (document.hidden || document.body.matches('.motion-paused, .screamers-off, .deck-capture, .deck-blackout') ||
-        document.querySelector('.deck-overview:not([hidden]), .deck-shortcuts:not([hidden]), .presenter-menu[open]') || screamer.classList.contains('on')) return;
-    screamImage.src = GHOST_SRCS[screamCount % GHOST_SRCS.length];
-    screamer.dataset.type = String(screamCount++ % 3);
-    screamer.classList.add('on');
-    clearTimeout(screamEnd);
-    screamEnd = setTimeout(() => screamer.classList.remove('on'), 950);
+  function ghostTick(time) {
+    ghostFrame = 0;
+    if (document.hidden || document.body.matches('.motion-paused, .faces-hidden, .deck-capture')) return;
+    const dt = Math.min(2, (time-lastFrame)/16.67 || 1); lastFrame=time;
+    for (let i=ghosts.length-1; i>=0; i--) {
+      const g=ghosts[i];
+      const bob=Math.sin(time*.0006+g.phase)*10;
+      const left=g.left+g.x, top=g.top+g.y+bob;
+      const dx=left+g.size/2-pointer.x, dy=top+g.size/2-pointer.y;
+      const distance=Math.hypot(dx,dy);
+      if(distance<230 && distance>.1) { const f=(230-distance)/230*4.8*dt; g.vx+=dx/distance*f; g.vy+=dy/distance*f; }
+      g.vx*=Math.pow(.965,dt); g.vy*=Math.pow(.965,dt);
+      g.x+=g.vx*dt; g.y+=g.vy*dt;
+      if(left+g.size < -30 || left > innerWidth+30 || top+g.size < -30 || top > innerHeight+30) { removeGhost(g); continue; }
+      g.el.style.transform=`translate3d(${g.x}px,${g.y + bob}px,0)`;
+    }
+    if (ghosts.length) ghostFrame=requestAnimationFrame(ghostTick);
   }
-  function scheduleScream() {
-    setTimeout(() => { scream(); scheduleScream(); }, 5000 + Math.random() * 4000);
-  }
-  window.addEventListener('scream-now', scream);
-  document.addEventListener('visibilitychange', () => { if (document.hidden) screamer.classList.remove('on'); });
-  window.addEventListener('keydown', e => { if(e.key === 'Escape') screamer.classList.remove('on'); });
+  window.addEventListener('effects-change', startGhosts);
+  document.addEventListener('visibilitychange', startGhosts);
   buildTrip();
-  requestAnimationFrame(ghostTick);
   setTimeout(spawnGhost, 500);
   setTimeout(spawnGhost, 1500);
-  setInterval(spawnGhost, 2400);
-  scheduleScream();
+  setInterval(spawnGhost, 1500);
   buildResults(); fit(); show(Number(location.hash.match(/^#slide-([1-5])$/)?.[1] || 1) - 1);
 </script>
+<script src="assets/backdrop.js"></script>
 <script src="assets/presentation.js"></script>
+<script src="assets/trip-audio.js?v=creatures-4"></script>
+<script src="assets/screamers.js?v=creatures-4"></script>
 <script src="assets/export-layout.js"></script>
 </body>
 </html>

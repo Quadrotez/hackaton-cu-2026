@@ -624,11 +624,7 @@
   }
 
   // Блик, который следует за курсором, — как отклик стекла на наклон устройства.
-  stage.addEventListener('pointermove', e => {
-    const r = stage.getBoundingClientRect();
-    stage.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100) + '%');
-    stage.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100) + '%');
-  });
+  // Pointer-driven glass highlight is handled once per frame in presentation.js.
 
   window.addEventListener('resize', fit);
   window.addEventListener('keydown', e => {
@@ -652,6 +648,7 @@
 
   buildResults(); fit(); show(Number(location.hash.match(/^#slide-([1-5])$/)?.[1] || 1) - 1);
 </script>
+<script src="assets/backdrop.js"></script>
 <script src="assets/presentation.js"></script>
 <script src="assets/export-layout.js"></script>
 </body>
