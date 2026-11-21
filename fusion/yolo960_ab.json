@@ -1,0 +1,25 @@
+{
+  "primary_csv": "work/submission_grisha_single_final.csv",
+  "primary_checkpoint": "work/grisha_yolo.pt",
+  "primary_checkpoint_sha256": "24487b0e4f23da64ab082c453c55ace602f71f1c35a045015b991deb605b3ac5",
+  "heads": "work/astra_joint04_heads.pkl",
+  "groups": {
+    "m": {
+      "kaggle_kernel": "v1tush/astramis-yolo11m-960-5folds",
+      "checkpoint": "work/kaggle/astramis-yolo11m-960-5folds/output/astramis-cv/fold_{fold:02d}/weights/last.pt",
+      "imgsz": 960,
+      "weight": 1.0
+    },
+    "l": {
+      "kaggle_kernel": "v1tush/astramis-yolo11l-960-5folds",
+      "checkpoint": "work/kaggle/astramis-yolo11l-960-5folds/output/astramis-cv/fold_{fold:02d}/weights/last.pt",
+      "imgsz": 960,
+      "weight": 1.0
+    },
+    "n": {
+      "checkpoint": "work/detector_oof_v1/fold_{fold:02d}/train/weights/best.pt",
+      "imgsz": 640,
+      "weight": 0.3
+    }
+  }
+}

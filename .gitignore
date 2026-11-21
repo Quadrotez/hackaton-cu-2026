@@ -16,3 +16,9 @@ predictions.csv
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
+
+# Локальные учётные данные Kaggle
+kaggle_token.txt
+
+# Служебные файлы macOS
+.DS_Store
