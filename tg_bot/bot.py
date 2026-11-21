@@ -64,6 +64,7 @@ def main():
             fromu = msg.get("from", {})
             name = fromu.get("first_name") or fromu.get("username") or str(fromu.get("id"))
             text = msg.get("text", "")
+            doc = msg.get("document")
             if not cid: continue
             users = load_users()
             if text.startswith("/start"):
@@ -79,11 +80,18 @@ def main():
                     fh.write(json.dumps({"ts": datetime.datetime.now().isoformat(timespec="seconds"),
                                          "chat_id": cid, "sender": name, "text": text},
                                         ensure_ascii=False) + "\n")
-            if text.startswith("/"):
+            if text.startswith("/") and not doc:
                 continue
             sender = users[str(cid)].get("name", str(cid))
-            res = broadcast(text, sender)
-            print("relayed", sender, len(text), res, flush=True)
+            if doc:
+                caption = f"[{sender} → всем]\n{text or doc.get('file_name','файл')}"
+                for target in load_users():
+                    api("copyMessage", chat_id=int(target), from_chat_id=cid,
+                        message_id=msg["message_id"], caption=caption)
+                print("relayed file", sender, doc.get("file_name"), flush=True)
+            else:
+                res = broadcast(text, sender)
+                print("relayed", sender, len(text), res, flush=True)
         OFFSET.write_text(str(offset))
 
 
