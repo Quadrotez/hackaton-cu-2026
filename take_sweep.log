@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "/tmp/opencode/astramis-top1/sweep.py", line 62, in <module>
+    sweep(field, values, tag)
+    ~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/opencode/astramis-top1/sweep.py", line 45, in sweep
+    res = S.submit(out, spec["name"])
+  File "/tmp/opencode/astramis-top1/submit_sml.py", line 50, in submit
+    raise RuntimeError(f"init {init.status_code}: {init.text[:400]}")
+RuntimeError: init 401: {"detail":{"reason_code":"application_session_closed"},"request_id":"294b34418c9048869340777f66350411"}
