@@ -6,6 +6,7 @@ Astramis Detection Improvement Pipeline:
 - Automated Conveyor Boundary & Mounting Rig Suppression (NO HARDCODED FRAME IDs)
 - Automated Faint Object Gating vs Empty Frame Noise Elimination
 - Segmentation-guided Bounding Box Coordinate Refinement
+- Intra-class Sub-Part / Nested Detection Suppression
 - CPU Runtime Benchmarking (Ryzen 7 5700U, 16 threads)
 - Export to JSON and CSV
 """
@@ -49,6 +50,18 @@ def box_iou(b1, b2):
     a2 = (b2[2] - b2[0]) * (b2[3] - b2[1])
     union = a1 + a2 - inter
     return inter / union if union > 0 else 0.0
+
+def box_ios(b_small, b_large):
+    """Intersection over smaller box area (containment ratio)."""
+    x1 = max(b_small[0], b_large[0])
+    y1 = max(b_small[1], b_large[1])
+    x2 = min(b_small[2], b_large[2])
+    y2 = min(b_small[3], b_large[3])
+    w = max(0.0, x2 - x1)
+    h = max(0.0, y2 - y1)
+    inter = w * h
+    a_small = (b_small[2] - b_small[0]) * (b_small[3] - b_small[1])
+    return inter / a_small if a_small > 0 else 0.0
 
 def is_conveyor_artifact(box, mask=None, img_w=IMG_W, img_h=IMG_H):
     """
@@ -172,7 +185,6 @@ def weighted_box_fusion(boxes_list, scores_list, classes_list, masks_list=None, 
             f_box = (np.sum(c_boxes * c_weights[:, None], axis=0) / np.sum(c_weights)).tolist()
             
             # Weighted confidence score
-            # Multi-scale consensus boosts confidence; single-scale transient noise gets dampened
             f_score = float(np.sum([weights[m] * s for m, s in zip(c_m_idx, c_scores)]) / total_weight)
             if len(c_indices) > 1:
                 f_score = max(f_score, float(np.mean(c_scores)))
@@ -210,6 +222,79 @@ def mask_to_polygons(mask, min_contour_area=50):
             polys.append(pts)
     return polys
 
+def filter_and_deduplicate(f_boxes, f_scores, f_classes, f_masks):
+    """
+    Applies:
+    1. Spatial margin & mask area gating
+    2. Intra-class nested sub-box suppression (IoS > 0.80)
+    3. Retains top-1 detection per form class on the single-object conveyor belt
+    """
+    candidates = []
+    for i in range(len(f_boxes)):
+        mask_i = f_masks[i] if i < len(f_masks) else None
+        mask_area = int(mask_i.sum()) if mask_i is not None else int((f_boxes[i][2]-f_boxes[i][0])*(f_boxes[i][3]-f_boxes[i][1]))
+        if mask_area < MIN_MASK_AREA:
+            continue
+        
+        is_art, reason = is_conveyor_artifact(f_boxes[i], mask_i)
+        if is_art:
+            continue
+        
+        if f_scores[i] < 0.05:
+            continue
+
+        candidates.append({
+            "box": f_boxes[i],
+            "score": f_scores[i],
+            "form": f_classes[i],
+            "mask": mask_i,
+            "mask_area": mask_area
+        })
+
+    if not candidates:
+        return []
+
+    # Check for same-class nested sub-boxes (e.g. handle inside bottle, cap inside bottle)
+    keep_flags = [True] * len(candidates)
+    for i in range(len(candidates)):
+        if not keep_flags[i]:
+            continue
+        for j in range(len(candidates)):
+            if i != j and keep_flags[j] and candidates[i]["form"] == candidates[j]["form"]:
+                area_i = (candidates[i]["box"][2] - candidates[i]["box"][0]) * (candidates[i]["box"][3] - candidates[i]["box"][1])
+                area_j = (candidates[j]["box"][2] - candidates[j]["box"][0]) * (candidates[j]["box"][3] - candidates[j]["box"][1])
+                if area_i < area_j:
+                    ios = box_ios(candidates[i]["box"], candidates[j]["box"])
+                    if ios > 0.80:
+                        # i is a nested sub-part of j with same class; suppress i
+                        keep_flags[i] = False
+                        break
+
+    surviving = [candidates[i] for i in range(len(candidates)) if keep_flags[i]]
+
+    # Retain at most top-1 per form class (one bulk candidate, one solid candidate)
+    best_by_class = {}
+    for d in surviving:
+        cls = d["form"]
+        if cls not in best_by_class or d["score"] > best_by_class[cls]["score"]:
+            best_by_class[cls] = d
+
+    final_dets = list(best_by_class.values())
+    final_dets.sort(key=lambda x: -x["score"])
+
+    # Package output
+    out = []
+    for d in final_dets:
+        polys = mask_to_polygons(d["mask"]) if d["mask"] is not None else []
+        out.append({
+            "box": [round(float(c), 2) for c in d["box"]],
+            "score": round(float(d["score"]), 5),
+            "form": d["form"],
+            "mask_area": d["mask_area"],
+            "polygons": polys
+        })
+    return out
+
 def run_test_inference(scales=(640, 960), use_flip=True, num_threads=16):
     torch.set_num_threads(num_threads)
     print(f"Loading YOLO model from {WEIGHTS_PATH} (threads={num_threads})...")
@@ -219,8 +304,6 @@ def run_test_inference(scales=(640, 960), use_flip=True, num_threads=16):
     print(f"Found {len(test_dirs)} test frames in {TEST_DIR}")
     assert len(test_dirs) == 137, f"Expected 137 test frames, found {len(test_dirs)}"
 
-    # Weights for WBF: scales=(640, 960), flip=(640_flip, 960_flip)
-    # Give primary scale 640 slightly higher anchor weight, 960 high resolution weight
     pass_weights = []
     for s in scales:
         pass_weights.append(1.0 if s == 640 else 0.9)
@@ -241,8 +324,6 @@ def run_test_inference(scales=(640, 960), use_flip=True, num_threads=16):
         img_bgr = cv2.imread(img_path)
         assert img_bgr is not None, f"Could not read {img_path}"
 
-        t0_frame = time.time()
-
         boxes_list = []
         scores_list = []
         classes_list = []
@@ -259,7 +340,6 @@ def run_test_inference(scales=(640, 960), use_flip=True, num_threads=16):
             cl = [model.names[int(c)] for c in res.boxes.cls.cpu().numpy()] if res.boxes is not None else []
             m = (res.masks.data.cpu().numpy() > 0.5).astype(np.uint8) if res.masks is not None else None
 
-            # Filter edge artifacts from candidate stream
             filt_b, filt_sc, filt_cl, filt_m = [], [], [], []
             for i in range(len(b)):
                 mask_i = m[i] if m is not None else None
@@ -289,7 +369,6 @@ def run_test_inference(scales=(640, 960), use_flip=True, num_threads=16):
                 cl = [model.names[int(c)] for c in res.boxes.cls.cpu().numpy()] if res.boxes is not None else []
                 m_raw = (res.masks.data.cpu().numpy() > 0.5).astype(np.uint8) if res.masks is not None else None
 
-                # Invert horizontal flip coordinates back to original frame
                 filt_b, filt_sc, filt_cl, filt_m = [], [], [], []
                 for i in range(len(b_raw)):
                     bx = b_raw[i]
@@ -320,36 +399,10 @@ def run_test_inference(scales=(640, 960), use_flip=True, num_threads=16):
             weights=pass_weights, iou_thr=0.50
         )
 
-        # Final filtering & empty frame gating
-        final_dets = []
-        for i in range(len(f_boxes)):
-            mask_i = f_masks[i] if i < len(f_masks) else None
-            # Area gating
-            mask_area = int(mask_i.sum()) if mask_i is not None else int((f_boxes[i][2]-f_boxes[i][0])*(f_boxes[i][3]-f_boxes[i][1]))
-            if mask_area < MIN_MASK_AREA:
-                continue
-            
-            # Secondary check on artifact filter
-            is_art, reason = is_conveyor_artifact(f_boxes[i], mask_i)
-            if is_art:
-                continue
-            
-            # Form-level confidence threshold:
-            # For confirmed multi-scale consensus, retain down to 0.05
-            # For single-scale faint detection, require score >= 0.08
-            if f_scores[i] < 0.05:
-                continue
-
-            polys = mask_to_polygons(mask_i) if mask_i is not None else []
-            final_dets.append({
-                "box": [round(float(c), 2) for c in f_boxes[i]],
-                "score": round(float(f_scores[i]), 5),
-                "form": f_classes[i],
-                "mask_area": mask_area,
-                "polygons": polys
-            })
-
+        # 4. Final filtering, intra-class deduplication & empty frame gating
+        final_dets = filter_and_deduplicate(f_boxes, f_scores, f_classes, f_masks)
         time_wbf_total += (time.time() - t_wbf0)
+
         all_frame_results[img_id] = final_dets
 
         if (idx + 1) % 20 == 0 or (idx + 1) == len(test_dirs):
@@ -420,7 +473,6 @@ def run_test_inference(scales=(640, 960), use_flip=True, num_threads=16):
                 x1, y1, x2, y2 = d["box"]
                 sc = d["score"]
                 fm = d["form"]
-                # 10 values per detection
                 parts.append(f"{x1:.1f} {y1:.1f} {x2:.1f} {y2:.1f} {sc:.4f} {fm} plastic 500.0 100.0 1")
             lines.append(f"{img_id},{';'.join(parts)}")
 
