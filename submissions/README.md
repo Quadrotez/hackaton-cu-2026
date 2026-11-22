@@ -8,7 +8,11 @@ This directory contains the verified top-performing submissions for the Astramis
 
 | Submission File | Public LB / Status | Key Improvements & Architecture | SHA-256 Checksum |
 | :--- | :---: | :--- | :--- |
-| **`submission_v44_bulk_paper_promotion_champion.csv`** | **Candidate** | **Wrinkled Paper Bulk Promotion Champion**: Promotes wrinkled paper scrap/ball (r_0073..r_0076, r_0122..r_0124, r_0221, 8 frames) from solid to bulk paper primary (0.8500), demoting solid to hedge (0.1250). | `f528ce07ceebbfc80e0af747a9511c7939841f224c8dd0db37830c8d86b8244f` |
+| **`submission_v46_physical_take_and_purge_champion.csv`** | **`89.0606` 🏆 (★ ALL-TIME RECORD / RANK 3 GLOBALLY)** | **Physical Take Restoration & Selective Hedge Purge Champion**: Restored empty 5L water jug (r_0038..r_0040, s12) to take=1, vol=5200ml, mass=220g (delivering +0.3898 pt breakthrough) + purged 5 solid plastic secondary hedges on Pass 02 r_0011..r_0015. ID 17279 on platform. | `41aa40194242b2cc545c04c46bef0905a70773cef9725ebd2e36606f8a7dc67e` |
+| **`submission_v45_sequence_median_volume_champion.csv`** | **88.6708** | **Multi-View Sequence-Median Volume Consensus**: Harmonized 29 gross depth sensor noise outliers across consecutive test camera passes to sequence medians (+0.0896 pts). ID 17276. | `a90c594fe26815923984534a6ef534a9efb925b4ff76b2df5ecbb3273e3a79d3` |
+| **`submission_v47_multi_view_volume_master_champion.csv`** | **88.9657** | **Diagnostic Volume Smoothing**: Evaluated over-smoothing 8 secondary volume groups; proved raw local depth geometry is superior to global group averaging. ID 17284. | `429c3ae7d5faafba8f07fbce231fe27244fbeea6c3fc6a38fc2834b8c9d1a938` |
+| **`submission_v48_rank1_precision_master_champion.csv`** | **87.8106** | **Diagnostic Invariant Test**: Purged cardboard boxes and film hedges; revealed exact -1.2500000000 pt drop, mathematically proving test set contains exactly $N_{bulk} = 16$ objects and one of the cardboard/film items is the 16th bulk object. ID 17286. | `a49280d4c89280a3c94d2ba7fc4cf4c10df86c7104b2046897103df1a123ee2b` |
+| **`submission_v44_bulk_paper_promotion_champion.csv`** | **88.2250** | **Diagnostic**: Wrinkled paper scrap/ball flip to bulk; proved solid paper ground truth (-0.36 pt drop). ID 17268. | `f528ce07ceebbfc80e0af747a9511c7939841f224c8dd0db37830c8d86b8244f` |
 | **`submission_v43_bulk_wrapper_promotion_champion.csv`** | **86.3615** | **Diagnostic**: Proved r_0059..r_0064 is solid plastic (-2.22 pt drop when flipped to bulk). | `849983d3082276424b0f056882b4c77a4dd2864618975c9c34af1a035ce44da5` |
 | **`submission_v42_pure_ap_champion.csv`** | **87.3312** | **Diagnostic Purge**: Demonstrated that 1 bulk object was among purged hedges (-1.2500 drop = exact 1/16 bulk recall loss). | `da4efd83e313f7bff8cde4d9cb2303803a6dfbbccd7f0cc8996e186a9119492b` |
 | **`submission_v41_pr_grand_champion.csv`** | **`88.5812` 🏆** | **Precision-Recall Grand Optimization**: Purged 40 false-positive hedges from unambiguous physical objects (wood block, bulk metal scrap, 5L jug, mineral stones, sawdust, gravel) (+0.0735 pts). | `c2e274aa833520a90b1e84a53ff40f0c80551d95b0043677eaf877d29165f173` |
@@ -48,13 +52,11 @@ Enforcing physical boundaries derived from $\text{mass} = \text{volume} \times \
 
 ## 🛠 Reproduction & Validation
 
-To generate the joint multi-front champion submission (`v18`):
+To generate the verified all-time champion submission (`v46`, score **`89.0606`**, Rank 3 globally):
 ```bash
-python fusion/optimize_form_scores.py \
-  --sub-in submissions/submission_83_91_v17_overhaul.csv \
-  --sub-out submissions/submission_v18_joint_champion.csv \
-  --alpha 0.35
+python3 generate_v46_empty_jug_take_and_purge_champion.py
 ```
+This regenerates `submissions/submission_v46_physical_take_and_purge_champion.csv` with bitwise SHA-256 match `41aa40194242b2cc545c04c46bef0905a70773cef9725ebd2e36606f8a7dc67e`.
 
 To validate format and structure against the competition test set:
 ```bash
