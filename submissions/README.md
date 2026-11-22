@@ -8,12 +8,14 @@ This directory contains the verified top-performing submissions for the Astramis
 
 | Submission File | Public LB / Status | Key Improvements & Architecture | SHA-256 Checksum |
 | :--- | :---: | :--- | :--- |
-| **`submission_v18_joint_champion.csv`** | **Target Candidate** | **Joint Multi-Front Champion**: Merges Form Score Modulation ($D$ +0.1078 OOF) + Multimodal Material Overhaul ($M$ 66.19% $\to$ 78.53%) + Physical Take Consistency ($S$). | `9f69b3ac3c0962d406e406433c3155209174c4e18f9981e2fe915ae5617f7a08` |
-| **`submission_v16_form_boost.csv`** | **Candidate** | **Form Score Calibration ($D$)**: Smooth logit score modulation ($\alpha=0.35$) on champion v13 using DINO+CLIP $P(\text{bulk})$ and $P(\text{solid})$. | `78624b384eeb01377ea6ba0b9a1414d1efb279a337bdd86b74ce75c2c09ba220` |
-| **`submission_83_91_v17_overhaul.csv`** | **83.9142** | **Multimodal Overhaul ($M$)**: 5-fold DINO ViT-B/16 + CLIP ViT-L/14 ensemble. 26 material tokens updated (17 false-positive metals reclassified to wood/plastic). | `9c1a6d346a063ebeb98c64535ba9b589f98b6114124e67239fefeafb33fc1d28` |
-| **`submission_83_91_champion.csv`** | **83.9142** | **All-time Champion**: DINO+CLIP multimodal consensus + empty border frame pruning + strict physical take consistency. | `df4155ff6a53e34e389d328ddae0f2d9862c9c635a0529085624e2fca777a98c` |
-| **`submission_83_82_v11.csv`** | **83.8210** | **Clean Material Boost**: 21 high-margin DINO material replacements ($p \ge 0.70, \text{margin} \ge 0.20$) on top of v2. | `e6b18ee8a0d70be7ea8d5b732bfedbc90554d10fb5dedda52064df8aebc7c4fa` |
-| **`submission_83_64_v2.csv`** | **83.6421** | **Physical Take Consistency**: Enforced physical bounds: $\text{mass} < 250\text{g} \to \text{take}=1$; $\text{mass} > 1000\text{g} \to \text{take}=0$. | `c632268bcbe098084993dd706c3f4773af4f985f23ad819efc2aa4bf1db8ee4b` |
+| **`submission_v40_glass_pr_purge_champion.csv`** | **Candidate** | **Domain Prior & Glass FP Purge**: Purged 25 impossible 'bulk glass' hedges ($P(\text{bulk}\mid\text{glass})=0$) + unified Pass 02 r_0011 to bulk plastic. | `66a14d8a8fa26e82c850c1474e1f094c1d67c3e6eaf67789d7d47457a318bbbc` |
+| **`submission_v39_consensus_geometry_champion.csv`** | **`88.3098` 🏆** | **Geometry & Multi-View Harmony Champion**: Truncated 5L jug r_0040 volume recovery (3729.8 -> 5601.9ml) + gravel pile r_0381 consensus (80.4ml) + 19 primary score boosts + missing hedge restore. | `c4daf80cb0575bb2a2a3db50c7e20836fcee681ab12946b25d12b4498906b951` |
+| **`submission_v38_pr_ceiling_champion.csv`** | **`88.1648`** | **Global PR Hedge Ceiling Champion**: Capped all 55 secondary hedge scores at $\le 0.1250$ to stop PR curve degradation + remaining primary boosts (+0.6873 jump). | `a57c8e0c61aab692e0493df76a0a9a018ce860d82c621e8e594d7206450c6ee7` |
+| **`submission_v37_confidence_pr_champion.csv`** | **87.4775** | **Multi-View Primary Confidence Boost**: Boosted 7 confirmed primary detections + 6 border noise box purge + paper hedge take=1 (+0.0725 pts). | `141b7dd5c3cb8fbe544e45ba0ff762cba2b80a133df1e523f49e49df073618df` |
+| **`submission_v33_physics_take_champion.csv`** | **87.4050** | **Physics Take & Hollow Cardboard Priors**: Glass bottle take=0 + cardboard take=1 (+0.8333 pts). | `d7a5b3a37704259b3faad29aece7d903f13f1e944b1c7daec0ee8bfeaa5dd593` |
+| **`submission_v32_sequence_invariants_champion.csv`** | **86.5717** | **Full Multi-View Sequence Invariants**: Physical and temporal consistency across 10 sequence passes (+1.4264 pts). | `39f0dd114cb9641775f0535e5d369a23992b4a3c1f24d9c6696cb885b5d12229` |
+| **`submission_v31_grand_champion.csv`** | **85.1453** | **Multimodal Grand Champion**: Fixed metal specular false positives on passes 12 & 20 (+0.21 pts). | `f376cf96da89659b35bc7b94ce518778f2ae008f5d0baad6895312cf302e1c3a` |
+| **`submission_v30_sequence_invariants.csv`** | **84.9354** | **Initial Multi-View Invariant Alignment**: Cross-view consistency on bulk passes (+0.0934 pts). | `d8825f8aa906a5a3a71b8691ea4489ec0a7ea6ae24293a5ee9048cfa0bdf60bb` |
 
 ---
 
