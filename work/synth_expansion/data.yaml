@@ -1,0 +1,8 @@
+# Astramis YOLO Form Segmentation & Detection Config
+path: /home/conexl/Code/hackathon/hackaton-cu-2026/work/synth_expansion
+train: images
+val: images
+
+names:
+  0: bulk
+  1: solid
