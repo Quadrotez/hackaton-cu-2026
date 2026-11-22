@@ -1,0 +1,47 @@
+Scream recordings used in the presentation (2026-11-21)
+=====================================================
+The player uses only the ten scream-*.wav files. No engine, electronic glitch,
+synthetic alarm or silent unlock clip remains in the playback pool.
+
+Source recordings:
+
+1. "scream.wav" by analogchill
+https://freesound.org/people/analogchill/sounds/35716/
+License: Creative Commons Zero (CC0)
+https://creativecommons.org/publicdomain/zero/1.0/
+Used for scream-female-dry.wav and scream-echo.wav.
+
+2. "Horror shrieks woman" by AderuMoro
+https://freesound.org/people/AderuMoro/sounds/320740/
+License: Creative Commons Zero (CC0)
+https://creativecommons.org/publicdomain/zero/1.0/
+Creator: https://www.youtube.com/user/AderuMoro
+Used for scream-female-sharp.wav, scream-female-long.wav, scream-rabbit.wav.
+
+3. "Ahgghh_ses2.wav" by freesound (Freesound at Caixaforum)
+https://freesound.org/people/freesound/sounds/25273/
+License: Creative Commons Zero (CC0)
+https://creativecommons.org/publicdomain/zero/1.0/
+Used for scream-crowd-close.wav and scream-crowd-panic.wav.
+
+4. "male_Thijs_loud_scream.aiff" by thanvannispen
+https://freesound.org/people/thanvannispen/sounds/9432/
+License: Creative Commons Attribution 4.0 (CC BY 4.0)
+https://creativecommons.org/licenses/by/4.0/
+Used for scream-male-high.wav, scream-male-deep.wav, scream-beast.wav.
+Attribution: "male_Thijs_loud_scream.aiff" by thanvannispen, Freesound,
+licensed under CC BY 4.0. Cropped, resampled, normalized, faded;
+some versions have changed pitch/speed. No endorsement is implied.
+
+Changes for this project:
+- Public high-quality MP3 previews decoded to mono 24 kHz / signed 16-bit PCM.
+- Active voice excerpts cropped to 1.6 seconds; initial silence removed.
+- Peak normalized to 0.86 with 12 ms attack / 75 ms release fades.
+- Separate source excerpts, some speed/pitch variants and one echo variant.
+- Exact excerpt offsets, speed changes and echo flags are in screams.json.
+- Ten-item shuffled playback bag; no consecutive repeats across bag boundaries.
+- Default playback volume 65%; volume and mute are user-controlled.
+
+vocal-scream.wav is a compatibility copy of scream-female-dry.wav, retained for
+the direct preview shared in chat. It is not an extra playback-pool entry.
+No runtime internet connection is needed.

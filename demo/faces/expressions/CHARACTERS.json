@@ -1,0 +1,32 @@
+{
+  "generator": "built-in image_gen",
+  "created": "2026-11-21",
+  "note": "Fictional character artwork only. No real prisoner photos or prison databases used.",
+  "assets": [
+    {
+      "path": "faces/expressions/giraffe.png",
+      "id": "giraffe",
+      "prompt": "Use case: stylized-concept. Asset: a facial animation sprite atlas for an offline browser presentation. Subject: A comical giraffe head with short ossicones, expressive large eyes and recognizable giraffe spots. Detailed stylized 3D animal portrait, no human body. Output ONE SQUARE 2x2 sprite atlas, four precisely equal square cells, no gutter, no borders, no text or watermark. Same centered frontal head, camera, scale and lighting in all four cells; head fills 82% of each cell with a near-black background. Top left: eyes open, mouth closed. Top right: eyes open, mouth naturally wide open with actual jaw lowered and mouth interior visible. Bottom left: eyes closed in a natural blink, mouth closed. Bottom right: eyes closed, mouth naturally wide open. Keep facial features aligned across cells. No gore or injury."
+    },
+    {
+      "path": "faces/expressions/bonnie.png",
+      "id": "bonnie",
+      "prompt": "Use case: stylized-concept. Asset: a facial animation sprite atlas for an offline browser presentation. Subject: Bonnie the purple-blue animatronic rabbit from Five Nights at Freddy’s, recognizable long rabbit ears, red bow tie at lower edge, segmented robotic muzzle and square mechanical teeth. Detailed 3D game character, playful eerie. Output ONE SQUARE 2x2 sprite atlas, four precisely equal square cells, no gutter, no borders, no text or watermark. Same centered frontal head, camera, scale and lighting in all four cells; head fills 82% of each cell with a near-black background. Top left: eyes open, mouth closed. Top right: eyes open, mouth naturally wide open with actual jaw lowered and mouth interior visible. Bottom left: eyes closed in a natural blink, mouth closed. Bottom right: eyes closed, mouth naturally wide open. Keep facial features aligned across cells. No gore or injury."
+    },
+    {
+      "path": "faces/expressions/fox.png",
+      "id": "fox",
+      "prompt": "Use case: stylized-concept. Asset: a facial animation sprite atlas for an offline browser presentation. Subject: A mischievous red fox head, orange fur, large triangular ears, white muzzle, expressive eyes. Detailed stylized 3D animal portrait, no human body. Output ONE SQUARE 2x2 sprite atlas, four precisely equal square cells, no gutter, no borders, no text or watermark. Same centered frontal head, camera, scale and lighting in all four cells; head fills 82% of each cell with a near-black background. Top left: eyes open, mouth closed. Top right: eyes open, mouth naturally wide open with actual jaw lowered and mouth interior visible. Bottom left: eyes closed in a natural blink, mouth closed. Bottom right: eyes closed, mouth naturally wide open. Keep facial features aligned across cells. No gore or injury."
+    },
+    {
+      "path": "faces/expressions/escapee-orange.png",
+      "id": "escapee-orange",
+      "prompt": "Use case: stylized-concept. Asset: a facial animation sprite atlas for an offline browser presentation. Subject: An entirely fictional adult comic prison escapee, bald head, bushy black eyebrows, orange jumpsuit collar, theatrical grumpy expression. Stylized 3D game character, no resemblance to a real person, no names, no identifying number, no real prison reference. Output ONE SQUARE 2x2 sprite atlas, four precisely equal square cells, no gutter, no borders, no text or watermark. Same centered frontal head, camera, scale and lighting in all four cells; head fills 82% of each cell with a near-black background. Top left: eyes open, mouth closed. Top right: eyes open, mouth naturally wide open with actual jaw lowered and mouth interior visible. Bottom left: eyes closed in a natural blink, mouth closed. Bottom right: eyes closed, mouth naturally wide open. Keep facial features aligned across cells. No gore or injury."
+    },
+    {
+      "path": "faces/expressions/escapee-stripes.png",
+      "id": "escapee-stripes",
+      "prompt": "Use case: stylized-concept. Asset: a facial animation sprite atlas for an offline browser presentation. Subject: An entirely fictional adult comic prison escapee with a long face, shaggy gray hair, round glasses and black-and-white striped collar. Stylized 3D game character with a mischievous expression, no resemblance to a real person, no names, no identifying number, no real prison reference. Output ONE SQUARE 2x2 sprite atlas, four precisely equal square cells, no gutter, no borders, no text or watermark. Same centered frontal head, camera, scale and lighting in all four cells; head fills 82% of each cell with a near-black background. Top left: eyes open, mouth closed. Top right: eyes open, mouth naturally wide open with actual jaw lowered and mouth interior visible. Bottom left: eyes closed in a natural blink, mouth closed. Bottom right: eyes closed, mouth naturally wide open. Keep facial features aligned across cells. No gore or injury."
+    }
+  ]
+}
