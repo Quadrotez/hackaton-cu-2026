@@ -19,4 +19,4 @@ v52 (solid plastic ×1.25) + r_0064 bulk-only + volume plastic ×1.1.
 3. v52 — solid/plastic ×1.25 → 89.6817 на публике; тот же файл дал 90.9946 на привате.
 4. r_0064 bulk-only (+0.073) + volume plastic ×1.1 (+0.1285) → 89.9554.
 
-Все промежуточные CSV — в `submissions/`, хроника — `RANK1_FINAL_REPORT.md`, `TOP1_PUSH_FINAL.md`, `work/HYPOTHESES_SPRINT9.md`.
+Все промежуточные CSV — в `submissions/`, хроника — `TOP1_PUSH_FINAL.md`, `work/HYPOTHESES_SPRINT9.md`, `ЖУРНАЛ.md`.
