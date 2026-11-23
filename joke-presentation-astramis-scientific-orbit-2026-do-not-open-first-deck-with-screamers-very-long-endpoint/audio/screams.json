@@ -1,0 +1,92 @@
+[
+  {
+    "name": "scream-female-dry",
+    "source": "female",
+    "start": 1.74,
+    "speed": 1.0,
+    "echo": false,
+    "rms": 0.264,
+    "first_100ms_rms": 0.399
+  },
+  {
+    "name": "scream-female-sharp",
+    "source": "shriek",
+    "start": 0.25,
+    "speed": 1.0,
+    "echo": false,
+    "rms": 0.242,
+    "first_100ms_rms": 0.087
+  },
+  {
+    "name": "scream-female-long",
+    "source": "shriek",
+    "start": 4.43,
+    "speed": 1.0,
+    "echo": false,
+    "rms": 0.342,
+    "first_100ms_rms": 0.232
+  },
+  {
+    "name": "scream-male-high",
+    "source": "male",
+    "start": 0.58,
+    "speed": 1.0,
+    "echo": false,
+    "rms": 0.226,
+    "first_100ms_rms": 0.134
+  },
+  {
+    "name": "scream-male-deep",
+    "source": "male",
+    "start": 1.1,
+    "speed": 0.82,
+    "echo": false,
+    "rms": 0.232,
+    "first_100ms_rms": 0.198
+  },
+  {
+    "name": "scream-crowd-close",
+    "source": "crowd",
+    "start": 0.38,
+    "speed": 1.0,
+    "echo": false,
+    "rms": 0.255,
+    "first_100ms_rms": 0.225
+  },
+  {
+    "name": "scream-crowd-panic",
+    "source": "crowd",
+    "start": 4.25,
+    "speed": 1.0,
+    "echo": false,
+    "rms": 0.205,
+    "first_100ms_rms": 0.201
+  },
+  {
+    "name": "scream-echo",
+    "source": "female",
+    "start": 1.76,
+    "speed": 0.92,
+    "echo": true,
+    "rms": 0.232,
+    "first_100ms_rms": 0.357
+  },
+  {
+    "name": "scream-rabbit",
+    "source": "shriek",
+    "start": 4.47,
+    "speed": 1.13,
+    "echo": false,
+    "rms": 0.333,
+    "first_100ms_rms": 0.27
+  },
+  {
+    "name": "scream-beast",
+    "source": "male",
+    "start": 0.63,
+    "speed": 0.72,
+    "echo": false,
+    "rms": 0.215,
+    "first_100ms_rms": 0.127
+  }
+]

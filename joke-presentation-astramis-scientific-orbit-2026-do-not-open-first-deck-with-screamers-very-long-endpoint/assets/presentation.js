@@ -33,7 +33,8 @@
     document.body.classList.toggle('motion-paused', paused);
     motion.setAttribute('aria-pressed', String(paused));
     motion.textContent = paused ? 'Включить эффекты' : 'Пауза эффектов';
-    document.querySelectorAll('svg').forEach(svg => { if (paused) svg.pauseAnimations?.(); else svg.unpauseAnimations?.(); });
+    document.querySelectorAll('svg').forEach(svg => { if (paused || capture) svg.pauseAnimations?.(); else svg.unpauseAnimations?.(); });
+    window.dispatchEvent(new Event('effects-change'));
   }
   motion.addEventListener('click', () => setPaused(!document.body.classList.contains('motion-paused')));
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
@@ -74,11 +75,48 @@
   document.getElementById('help').addEventListener('click',showHelp);help.querySelector('button').addEventListener('click',closeHelp);
   const laser=document.createElement('div');laser.className='laser-pointer';laser.setAttribute('aria-hidden','true');document.body.appendChild(laser);
   document.getElementById('laser').addEventListener('click',()=>{const on=document.body.classList.toggle('laser-enabled');document.getElementById('laser').setAttribute('aria-pressed',String(on));header.querySelector('details').open=false;});
-  window.addEventListener('pointermove',e=>{laser.style.left=e.clientX+'px';laser.style.top=e.clientY+'px';laser.classList.add('is-visible');});
+  // Coalesce high-frequency pointer events and finish all layout reads before writes.
+  let pointerFrame = 0, pointerX = 0, pointerY = 0, glassRect;
+  const highlight = document.createElement('div');
+  highlight.className = 'glass-highlight'; highlight.setAttribute('aria-hidden', 'true');
+  stage.appendChild(highlight);
+  function paintPointer() {
+    pointerFrame = 0;
+    if (document.hidden) return;
+    if (!glassRect) {
+      glassRect = stage.getBoundingClientRect();
+      glassRect.localWidth = stage.offsetWidth;
+      glassRect.localHeight = stage.offsetHeight;
+    }
+    if (document.body.classList.contains('laser-enabled')) {
+      laser.style.transform = `translate3d(${pointerX - 6}px,${pointerY - 6}px,0)`;
+      laser.classList.add('is-visible');
+    }
+    if (!document.body.classList.contains('motion-paused') && glassRect.width) {
+      const x = (pointerX - glassRect.left) * glassRect.localWidth / glassRect.width;
+      const y = (pointerY - glassRect.top) * glassRect.localHeight / glassRect.height;
+      highlight.style.transform = `translate3d(${x - 560}px,${y - 560}px,0)`;
+    }
+  }
+  window.addEventListener('pointermove', e => {
+    pointerX = e.clientX; pointerY = e.clientY;
+    if (!pointerFrame) pointerFrame = requestAnimationFrame(paintPointer);
+  }, {passive:true});
+  function invalidateGlass(){glassRect = null;}
+  window.addEventListener('resize', invalidateGlass);
+  window.addEventListener('scroll', invalidateGlass, {passive:true});
+  new ResizeObserver(invalidateGlass).observe(stage);
   window.addEventListener('pointerout',e=>{if(!e.relatedTarget)laser.classList.remove('is-visible');});
   document.getElementById('blackout').addEventListener('click',()=>{document.body.classList.toggle('deck-blackout');header.querySelector('details').open=false;});
   document.getElementById('clear-faces')?.addEventListener('click',()=>{window.dispatchEvent(new Event('clear-faces'));header.querySelector('details').open=false;});
-  document.getElementById('faces')?.addEventListener('click',()=>{const hidden=document.body.classList.toggle('faces-hidden');document.getElementById('faces').textContent=hidden?'Лица выключены':'Лица включены';document.getElementById('faces').setAttribute('aria-pressed',String(!hidden));});
+  document.getElementById('faces')?.addEventListener('click',()=>{const hidden=document.body.classList.toggle('faces-hidden');document.getElementById('faces').textContent=hidden?'Лица выключены':'Лица включены';document.getElementById('faces').setAttribute('aria-pressed',String(!hidden));window.dispatchEvent(new Event('effects-change'));});
+  document.addEventListener('visibilitychange', () => {
+    document.body.classList.toggle('page-hidden', document.hidden);
+    document.querySelectorAll('svg').forEach(svg => {
+      if (document.hidden || document.body.matches('.motion-paused, .deck-capture')) svg.pauseAnimations?.();
+      else svg.unpauseAnimations?.();
+    });
+  });
   document.getElementById('screamers')?.addEventListener('click',()=>{
     const off=document.body.classList.toggle('screamers-off');
     document.getElementById('screamers').textContent=off?'Скримеры выключены':'Скримеры включены';

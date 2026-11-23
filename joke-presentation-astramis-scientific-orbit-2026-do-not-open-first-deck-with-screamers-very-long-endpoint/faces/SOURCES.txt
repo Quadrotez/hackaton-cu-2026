@@ -1,0 +1,47 @@
+Presentation-only portrait collection. Not part of the ML training dataset.
+
+face1.png, face2.png, face3.png
+Existing project photos, retained unchanged.
+Eye and jaw movement, monochrome ghost treatment and distortions are CSS effects.
+
+freddy.png
+Freddy Fazbear, downloaded 2026-11-21.
+Source page: https://www.pngaaa.com/detail/2757407
+Image: https://image.pngaaa.com/407/2757407-middle.png
+Third-party character artwork; no claim of authorship or a verified open license.
+
+racer.png
+Generated with the built-in image_gen tool, 2026-11-21.
+Prompt: "Use case: stylized-concept. Asset: square horror arcade browser screamer portrait. A fictional haunted racing driver wearing a scuffed silver open-face racing helmet with raised visor, visible uncanny human face, front-facing symmetric centered head filling 85% square, both eyes at 43% image height, mouth at 70%, plain near-black background, red and cyan rim lighting, detailed cinematic game render, playful eerie expression. No real person, no brand, no text, no watermark, no gore. Single portrait only, no grid."
+
+Freddy image-generation attempts failed; the downloaded image above is the final asset.
+The generated racer and downloaded Freddy are stored locally; runtime needs no external image or audio service.
+
+
+2026-11-21 expression update
+----------------------------
+faces/expressions/face1-fuller.png and face3-fuller.png
+Built-in image_gen edits of the original project photos. Four aligned expression
+frames (closed/open mouth, blink, open mouth + blink) with fuller cheeks and chin.
+Prompt: "Edit target: the provided person's portrait. Create ONE SQUARE 2-by-2 animation sprite atlas, four equal square cells, with no gutters, no borders, no text. Preserve the same recognizable identity, hair, clothes and photo style. Make his FACE MUCH FULLER: rounded full cheeks, wider jaw, a visible double chin, a playful exaggerated fuller version of the same person. Front-facing head centered against a near-black background in each cell, head fills 85% of each square. EXACT SAME CAMERA, HEAD POSITION, CROP AND LIGHTING IN ALL FOUR CELLS. Top-left: eyes open, mouth closed relaxed. Top-right: eyes open, mouth really open wide with anatomically natural lips, teeth and inside of mouth, as if saying AAH. Bottom-left: eyes naturally closed in a blink, mouth closed. Bottom-right: eyes closed, mouth naturally open wide. The open mouth must be part of the actual photorealistic face with real jaw movement, not a drawn oval or pasted mouth. All four are the same fuller version of the person. Single 2x2 photographic expression atlas, not separate photos. No gore, no horror makeup."
+
+faces/expressions/racer.png
+Built-in image_gen edit of the generated racer portrait.
+Prompt: "Edit target: this character portrait. Create ONE SQUARE 2-by-2 expression animation sprite sheet, four exactly equal square cells, no borders, no gutters, no text. Preserve this character's recognizable identity and design. Same front-facing centered head, camera, crop, near-black background and lighting in ALL FOUR CELLS, head fills 85% of each cell. Top-left: eyes open, mouth closed. Top-right: eyes open, mouth naturally wide open with the actual jaw lowered, real teeth and mouth interior. Bottom-left: eyes shut in a blink, mouth closed. Bottom-right: eyes shut, mouth wide open. Expressive playful facial animation, no gore. The mouth must be integrated into the face, not a separate painted overlay. Preserve helmet or hat if present. Output a single square 2x2 atlas with precisely aligned faces."
+
+Image generation rejected face2 and Freddy expression edits. Those use source-photo
+cutouts of the actual lower jaw; face2 is widened with CSS. No painted mouth or
+artificial eyelid overlays remain. Original files are unchanged.
+
+2026-11-21 additional characters
+--------------------------------
+Generated using the built-in image_gen tool:
+- faces/expressions/giraffe.png
+- faces/expressions/bonnie.png
+- faces/expressions/fox.png
+- faces/expressions/escapee-orange.png
+- faces/expressions/escapee-stripes.png
+All are four-frame closed/open mouth and blink atlases. The escapees are entirely
+fictional cartoon adults; no real prisoner photos or prison records were used.
+Exact prompts are recorded in faces/expressions/CHARACTERS.json.
+New characters have double selection weight, with no immediate portrait repeat.
