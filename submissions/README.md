@@ -54,7 +54,7 @@ Enforcing physical boundaries derived from $\text{mass} = \text{volume} \times \
 
 To generate the verified all-time champion submission (`v46`, score **`89.0606`**, Rank 3 globally):
 ```bash
-python3 generate_v46_empty_jug_take_and_purge_champion.py
+python3 scripts/generate_v46_empty_jug_take_and_purge_champion.py
 ```
 This regenerates `submissions/submission_v46_physical_take_and_purge_champion.csv` with bitwise SHA-256 match `41aa40194242b2cc545c04c46bef0905a70773cef9725ebd2e36606f8a7dc67e`.
 

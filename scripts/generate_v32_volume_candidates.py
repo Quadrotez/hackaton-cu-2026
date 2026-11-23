@@ -13,7 +13,7 @@ import hashlib
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[1]
 BASE = ROOT / "submissions" / "submission_v31_grand_champion.csv"
 
 NARROW = {("bulk", "metal"): 1.35}
