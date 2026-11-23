@@ -12,4 +12,11 @@ v52 (solid plastic ×1.25) + r_0064 bulk-only + volume plastic ×1.1.
 
 Рядом пробовалось: plastic ×1.35 → 89.5224; metal ×1.1 → 89.8419. Лимит отправок на аккаунте был исчерпан.
 
-Подробности — `RANK1_FINAL_REPORT.md` в корне репозитория.
+## Как пришли
+
+1. Детектор и атрибуты: ансамбль YOLO + DINO/CLIP, калибровка хеджей — `generate_v38_pr_ceiling_champion.py` … `generate_v48_rank1_precision_master_champion.py`.
+2. v50 — 89.3846 (bulk metal 1.35×, solid glass 1.16×).
+3. v52 — solid/plastic ×1.25 → 89.6817 на публике; тот же файл дал 90.9946 на привате.
+4. r_0064 bulk-only (+0.073) + volume plastic ×1.1 (+0.1285) → 89.9554.
+
+Все промежуточные CSV — в `submissions/`, хроника — `RANK1_FINAL_REPORT.md`, `TOP1_PUSH_FINAL.md`, `work/HYPOTHESES_SPRINT9.md`.
