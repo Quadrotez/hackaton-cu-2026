@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Астрамис — Что под щёткой?</title>
+<title>Астрамис — Trip / Что под щёткой?</title>
 <style>
   :root {
     --ink: #ffffff;
@@ -31,11 +31,24 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* --- Фон: техническая «орбитальная» сетка, не мягкий градиент --------- */
-  #backdrop { position: fixed; inset: 0; overflow: hidden; background: #080d16; }
+  /* --- TRIP: калейдоскоп, искажение и спонтанные лица ------------------- */
+  #backdrop { position: fixed; inset: 0; overflow: hidden; background: #05030f; }
   #backdrop > svg { width: 100%; height: 100%; display: block; }
-  .orbit-spin { transform-origin: 1120px 250px; animation: orbit 90s linear infinite; }
-  @keyframes orbit { to { transform: rotate(360deg); } }
+  .trip-wheel { transform-origin: 720px 450px; animation: trip-spin 48s linear infinite; }
+  .trip-wheel.rev { animation-direction: reverse; animation-duration: 31s; }
+  .trip-hue { animation: trip-hue 18s linear infinite; }
+  .trip-pulse { animation: trip-pulse 7s ease-in-out infinite alternate; transform-origin: 720px 450px; }
+  @keyframes trip-spin { to { transform: rotate(360deg); } }
+  @keyframes trip-hue { to { filter: hue-rotate(360deg) saturate(1.4); } }
+  @keyframes trip-pulse { from { transform: scale(.94); } to { transform: scale(1.08); } }
+  .face { opacity: 0; transform-box: fill-box; transform-origin: center;
+          animation: face-flare var(--life, 5s) ease-in-out forwards; }
+  @keyframes face-flare {
+    0%   { opacity: 0; transform: scale(.5) rotate(-8deg); filter: blur(6px); }
+    18%  { opacity: .85; transform: scale(1.06) rotate(3deg); filter: blur(0); }
+    55%  { opacity: .7;  transform: scale(1) rotate(-2deg); }
+    100% { opacity: 0; transform: scale(1.3) rotate(6deg); filter: blur(10px); }
+  }
 
   /* --- Основная стеклянная поверхность (один слой стекла) ------------- */
   #stage {
@@ -320,11 +333,37 @@
   .toolbar .sep { width: 1px; height: 18px; background: rgba(255,255,255,.25); }
   .toolbar .count { color: #fff; font-variant-numeric: tabular-nums; font-weight: 700; }
 
-  .hint { position: fixed; right: 16px; bottom: 12px; z-index: 8;
+  /* Лица поверх всех слоёв — их можно оттолкнуть мышкой */
+  #face-overlays { position: fixed; inset: 0; z-index: 30; pointer-events: none; overflow: hidden; }
+  .ghost { position: absolute; pointer-events: auto; cursor: grab; user-select: none;
+           will-change: transform; touch-action: none; }
+  .ghost:active { cursor: grabbing; }
+  .ghost img { display: block; width: 100%; height: auto;
+    animation: ghost-life var(--life, 9s) ease-in-out forwards;
+    filter: drop-shadow(0 0 22px rgba(255,169,10,.45)) contrast(1.1); }
+  @keyframes ghost-life {
+    0%   { opacity: 0; transform: scale(.72) rotate(-6deg); filter: blur(10px) grayscale(.4); }
+    12%  { opacity: .62; transform: scale(1.04) rotate(3deg); filter: blur(0) grayscale(0); }
+    55%  { opacity: .5; transform: scale(1) rotate(-2deg); }
+    88%  { opacity: .4; }
+    100% { opacity: 0; transform: scale(1.18) rotate(5deg); filter: blur(12px); }
+  }
+
+  .hint { position: fixed; right: 16px; bottom: 12px; z-index: 40;
     font-size: 11px; letter-spacing: .08em; color: rgba(255,255,255,.4); }
 
+  /* В trip-версии стекло плотнее: текст должен выжить на таком фоне */
+  #stage {
+    background:
+      linear-gradient(150deg, rgba(2,2,12,.60), rgba(2,2,12,.38) 50%, rgba(2,2,12,.58)),
+      linear-gradient(150deg, rgba(255,255,255,.13), rgba(255,255,255,.04) 42%, rgba(255,255,255,.09));
+    backdrop-filter: blur(20px) saturate(140%);
+    backdrop-filter: url(#lens-refract) blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+  }
+
   @media (prefers-reduced-motion: reduce) {
-    .orbit-spin, .sheen::after { animation: none !important; }
+    .trip-wheel, .trip-hue, .trip-pulse, .face, .sheen::after { animation: none !important; }
     .slide, .card { animation: none !important; transition: none !important; }
   }
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
@@ -344,7 +383,7 @@
 </style>
 <link rel="stylesheet" href="assets/presentation.css">
 </head>
-<body data-theme="orbit">
+<body data-theme="trip">
 
 <!-- SVG-фильтр: реальное преломление фона (линза), а не только размытие -->
 <svg width="0" height="0" aria-hidden="true" style="position:absolute">
@@ -353,47 +392,29 @@
     <feDisplacementMap in="SourceGraphic" in2="noise" scale="20"
                        xChannelSelector="R" yChannelSelector="G"/>
   </filter>
+  <!-- Искажение реальности: турбулентность с анимированной частотой -->
+  <filter id="trip-warp" x="-30%" y="-30%" width="160%" height="160%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.008" numOctaves="3" seed="13" result="noise">
+      <animate attributeName="baseFrequency" dur="14s" values="0.006;0.022;0.010;0.006" repeatCount="indefinite"/>
+    </feTurbulence>
+    <feDisplacementMap in="SourceGraphic" in2="noise" scale="80"
+                       xChannelSelector="R" yChannelSelector="G">
+      <animate attributeName="scale" dur="9s" values="40;140;60;40" repeatCount="indefinite"/>
+    </feDisplacementMap>
+  </filter>
 </svg>
 
 <div id="backdrop">
   <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-    <defs>
-      <pattern id="fine-grid" width="80" height="80" patternUnits="userSpaceOnUse">
-        <path d="M80 0H0V80" fill="none" stroke="rgba(255,255,255,.045)" stroke-width="1"/>
-      </pattern>
-      <pattern id="dot-grid" width="32" height="32" patternUnits="userSpaceOnUse">
-        <circle cx="3" cy="3" r="1.3" fill="rgba(141,237,249,.22)"/>
-      </pattern>
-    </defs>
-    <rect width="1440" height="900" fill="#080d16"/>
-    <rect width="1440" height="900" fill="url(#fine-grid)"/>
-    <rect width="1440" height="900" fill="url(#dot-grid)"/>
-
-    <g class="orbit-spin" fill="none">
-      <circle cx="1120" cy="250" r="300" stroke="rgba(141,237,249,.26)" stroke-width="1.5"/>
-      <circle cx="1120" cy="250" r="420" stroke="rgba(184,177,255,.20)" stroke-width="1.5"/>
-      <circle cx="1120" cy="250" r="560" stroke="rgba(253,205,18,.16)" stroke-width="1.5"/>
-      <circle cx="1120" cy="250" r="700" stroke="rgba(193,242,41,.10)" stroke-width="1.5"/>
-      <g stroke="rgba(141,237,249,.28)" stroke-width="2">
-        <path d="M1120 -30V40 M1120 460V530 M840 250H910 M1330 250H1400"/>
+    <rect width="1440" height="900" fill="#05030f"/>
+    <g filter="url(#trip-warp)">
+      <g class="trip-hue">
+        <g class="trip-wheel" id="trip-a"></g>
+        <g class="trip-wheel rev" id="trip-b"></g>
+        <g class="trip-pulse" id="trip-c"></g>
       </g>
     </g>
-
-    <g fill="none" stroke="rgba(255,255,255,.10)" stroke-width="1">
-      <circle cx="210" cy="730" r="170"/>
-      <circle cx="210" cy="730" r="240" stroke-dasharray="2 12"/>
-    </g>
-
-    <!-- Точные акценты палитры ЦУ -->
-    <circle cx="165" cy="105" r="44" fill="#fdcd12" opacity=".9"/>
-    <circle cx="165" cy="105" r="70" fill="none" stroke="#fdcd12" stroke-opacity=".35" stroke-width="1.5"/>
-    <rect x="1260" y="120" width="110" height="110" rx="26" fill="#8dedf9" opacity=".14"
-          transform="rotate(18 1315 175)"/>
-    <circle cx="1280" cy="740" r="150" fill="#775aff" opacity=".10"/>
-    <circle cx="150" cy="850" r="22" fill="#c1f229" opacity=".85"/>
-    <circle cx="700" cy="52" r="12" fill="#ffa171" opacity=".9"/>
-    <path d="M40 420L90 380L140 420L90 460Z" fill="none" stroke="#00a651"
-          stroke-opacity=".5" stroke-width="2"/>
+    <g id="faces"></g>
   </svg>
 </div>
 
@@ -539,7 +560,9 @@
   </nav>
 </div>
 
-<div class="hint">← → · слайды · P · печать</div>
+<div id="face-overlays"></div>
+
+<div class="hint">← → · слайды · P · печать · лица можно оттолкнуть мышкой</div>
 
 <script>
   // ЕДИНОЕ МЕСТО ДЛЯ ЦИФР: замени null на результаты финального сабмита.
@@ -650,6 +673,135 @@
 
 
 
+  // ---------- TRIP MODE ----------
+  const SVGNS = 'http://www.w3.org/2000/svg';
+  const TRIP_COLORS = ['#fdcd12', '#c1f229', '#8dedf9', '#b8b1ff', '#ffa171', '#fe68b9', '#00a651'];
+  const svgEl = (tag, attrs) => {
+    const el = document.createElementNS(SVGNS, tag);
+    Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+    return el;
+  };
+
+  function buildKaleidoscope(id, petals, tone) {
+    const host = document.getElementById(id);
+    for (let i = 0; i < petals; i++) {
+      const slice = svgEl('g', { transform: `rotate(${i * 360 / petals} 720 450)` });
+      slice.appendChild(svgEl('path', {
+        d: 'M720 450 C 840 300, 1020 320, 1120 450 C 1020 580, 840 600, 720 450 Z',
+        fill: TRIP_COLORS[i % TRIP_COLORS.length], 'fill-opacity': tone,
+        stroke: '#fff', 'stroke-opacity': '.18', 'stroke-width': '2'
+      }));
+      slice.appendChild(svgEl('circle', {
+        cx: 960, cy: 450, r: 26 + (i % 4) * 12,
+        fill: TRIP_COLORS[(i + 3) % TRIP_COLORS.length], 'fill-opacity': tone * 1.3,
+        stroke: '#fff', 'stroke-opacity': '.35', 'stroke-width': '2'
+      }));
+      slice.appendChild(svgEl('path', {
+        d: 'M880 380 L1010 450 L880 520 Z', fill: 'none',
+        stroke: TRIP_COLORS[(i + 5) % TRIP_COLORS.length],
+        'stroke-opacity': tone * 1.4, 'stroke-width': '3'
+      }));
+      host.appendChild(slice);
+    }
+  }
+
+  function buildTrip() {
+    buildKaleidoscope('trip-a', 14, .34);
+    buildKaleidoscope('trip-b', 10, .22);
+    const pulse = document.getElementById('trip-c');
+    for (let i = 0; i < 9; i++) {
+      pulse.appendChild(svgEl('circle', {
+        cx: 720, cy: 450, r: 120 + i * 95, fill: 'none',
+        stroke: TRIP_COLORS[i % TRIP_COLORS.length],
+        'stroke-opacity': .22 - i * .015, 'stroke-width': 3 + (i % 3) * 3
+      }));
+    }
+  }
+
+  // Портреты: круглые полупрозрачные спутники с инерцией.
+  const GHOST_SRCS = ['faces/face1.png', 'faces/face2.png', 'faces/face3.png'];
+  const overlay = document.getElementById('face-overlays');
+  const ghosts = [];
+  const pointer = { x: -9999, y: -9999 };
+  let lastFrame = 0;
+  let nextFace = 0;
+  window.addEventListener('pointermove', e => { pointer.x = e.clientX; pointer.y = e.clientY; });
+  window.addEventListener('pointerout', e => { if (!e.relatedTarget) pointer.x = pointer.y = -9999; });
+  function spawnGhost() {
+    if (document.body.classList.contains('deck-capture') || document.body.classList.contains('motion-paused') || document.body.classList.contains('faces-hidden') || document.hidden || ghosts.length >= 3) return;
+    const size = Math.min(220, Math.max(110, innerWidth * .13)) * (.8 + Math.random() * .35);
+    const left = Math.random() < .5;
+    const wrap = document.createElement('div');
+    wrap.className = 'ghost';
+    wrap.style.cssText = `left:${left ? 10 : innerWidth - size - 10}px;top:${80 + Math.random() * Math.max(1, innerHeight - size - 170)}px;width:${size}px;--halo:#e1e4ea;--life:${3 + Math.random()*1.2}s`;
+    const portrait = document.createElement('div');
+    portrait.className = 'ghost-portrait';
+    const image = document.createElement('img');
+    image.src = GHOST_SRCS[nextFace++ % GHOST_SRCS.length]; image.alt = ''; image.draggable = false;
+    portrait.appendChild(image); wrap.appendChild(portrait); overlay.appendChild(wrap);
+    const ghost = {el:wrap, x:0, y:0, vx:0, vy:0, phase:Math.random()*6.28};
+    ghosts.push(ghost);
+    wrap.addEventListener('animationend', e => { if (e.target === wrap && e.animationName === 'orb-life') removeGhost(ghost); });
+  }
+  function removeGhost(ghost) {
+    const i=ghosts.indexOf(ghost); if(i>=0) ghosts.splice(i,1);
+    ghost.el.remove();
+  }
+  window.addEventListener('clear-faces', () => {
+    for (const g of ghosts) {
+      const r=g.el.getBoundingClientRect();
+      const dx=r.left+r.width/2-innerWidth/2,dy=r.top+r.height/2-innerHeight/2;
+      const distance=Math.hypot(dx,dy)||1;
+      g.vx=dx/distance*45;g.vy=dy/distance*45;
+    }
+  });
+  function ghostTick(time) {
+    const dt = Math.min(2, (time-lastFrame)/16.67 || 1); lastFrame=time;
+    if (!document.body.classList.contains('motion-paused') && !document.hidden) {
+      for (const g of [...ghosts]) {
+        const r = g.el.getBoundingClientRect();
+        const dx=r.left+r.width/2-pointer.x, dy=r.top+r.height/2-pointer.y;
+        const distance=Math.hypot(dx,dy);
+        if(distance<230 && distance>.1) { const f=(230-distance)/230*4.8*dt; g.vx+=dx/distance*f; g.vy+=dy/distance*f; }
+        g.vx*=Math.pow(.965,dt); g.vy*=Math.pow(.965,dt);
+        g.x+=g.vx*dt; g.y+=g.vy*dt;
+        if(r.right < -30 || r.left > innerWidth+30 || r.bottom < -30 || r.top > innerHeight+30) { removeGhost(g); continue; }
+        g.el.style.transform=`translate3d(${g.x}px,${g.y + Math.sin(time*.0006+g.phase)*10}px,0)`;
+      }
+    }
+    requestAnimationFrame(ghostTick);
+  }
+  // Скримеры на всех слайдах Trip: каждые 5–9 секунд.
+  const screamer = document.createElement('div');
+  screamer.id = 'screamer';
+  screamer.setAttribute('aria-hidden', 'true');
+  const screamImage = document.createElement('img');
+  screamImage.alt = '';
+  screamer.appendChild(screamImage);
+  document.body.appendChild(screamer);
+  let screamCount = 0;
+  let screamEnd;
+  function scream() {
+    if (document.hidden || document.body.matches('.motion-paused, .screamers-off, .deck-capture, .deck-blackout') ||
+        document.querySelector('.deck-overview:not([hidden]), .deck-shortcuts:not([hidden]), .presenter-menu[open]') || screamer.classList.contains('on')) return;
+    screamImage.src = GHOST_SRCS[screamCount % GHOST_SRCS.length];
+    screamer.dataset.type = String(screamCount++ % 3);
+    screamer.classList.add('on');
+    clearTimeout(screamEnd);
+    screamEnd = setTimeout(() => screamer.classList.remove('on'), 950);
+  }
+  function scheduleScream() {
+    setTimeout(() => { scream(); scheduleScream(); }, 5000 + Math.random() * 4000);
+  }
+  window.addEventListener('scream-now', scream);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) screamer.classList.remove('on'); });
+  window.addEventListener('keydown', e => { if(e.key === 'Escape') screamer.classList.remove('on'); });
+  buildTrip();
+  requestAnimationFrame(ghostTick);
+  setTimeout(spawnGhost, 500);
+  setTimeout(spawnGhost, 1500);
+  setInterval(spawnGhost, 2400);
+  scheduleScream();
   buildResults(); fit(); show(Number(location.hash.match(/^#slide-([1-5])$/)?.[1] || 1) - 1);
 </script>
 <script src="assets/presentation.js"></script>

@@ -9,7 +9,7 @@
   header.className = 'site-header';
   header.innerHTML = `<a class="wordmark" href="index.html">ASTRAMIS<span>✳</span></a>
     <nav class="mode-nav" aria-label="Визуальный режим">
-      <a href="index.html" data-mode="orbit">Орбита</a><a href="index-optic.html" data-mode="optic">Оптика</a><a href="index-trip.html" data-mode="trip">Trip</a>
+      <a href="index-orbit.html" data-mode="orbit">Орбита</a><a href="index-optic.html" data-mode="optic">Оптика</a><a href="index.html" data-mode="trip">Trip</a>
     </nav><div class="display-tools"><button id="motion" aria-pressed="false">Пауза эффектов</button>
     <details class="presenter-menu"><summary>Показ</summary><div class="presenter-popover">
       <button id="overview">Обзор слайдов <kbd>O</kbd></button><button id="laser" aria-pressed="false">Лазерная указка <kbd>L</kbd></button>
