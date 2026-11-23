@@ -40,7 +40,6 @@
 | `submissions/` | Все промежуточные версии предсказаний |
 | `scripts/generate_v*.py` | Скрипты, воспроизводящие ключевые версии сабмитов |
 | `work/` | Эксперименты, обучение моделей, отчёты по спринтам |
-| `demo/defense-89-9554/` | Презентация защиты: pptx, pdf, HTML, текст речи |
 | `CONTRIBUTORS.md` | Кто из команды что сделал |
 
 Данные и метрика кейса лежат на платформе соревнования — по правилам хакатона они не публикуются в репозитории.
@@ -60,4 +59,5 @@
 - [Мероприятие на сайте ЦУ](https://my.centraluniversity.ru/events/bachelor-scientific-orbit)
 - [Соревнование на StackMoreLayers](https://stackmorelayers.ai/competitions/astramis)
 - [Сайт Astramis](http://astramis.com/)
-- [HTML-презентация](demo/defense-89-9554/index.html)
+- [Презентация на GitHub Pages](https://quadrotez.github.io/hackaton-scientific-orbit-2026/)
+- [PDF](https://quadrotez.github.io/hackaton-scientific-orbit-2026/exports/astramis-89-9554.pdf) · [PPTX](https://quadrotez.github.io/hackaton-scientific-orbit-2026/exports/astramis-89-9554.pptx)
